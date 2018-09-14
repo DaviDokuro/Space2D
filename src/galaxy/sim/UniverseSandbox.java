@@ -22,10 +22,12 @@ public class UniverseSandbox {
 	public static double FPS = 60, FRAMEWIDTH = 1280, FRAMEHEIGHT = 720, FRAME = 0, FRAMESKIP = 600, RUNTIME = 6000000;
 	public static boolean SCREENCAP = false, RENDERLIMIT = false;
 
-	public static double PRECISION = 10, SPEEDSQUARED = Math.pow(10, 8), scale = 4 * Math.pow(10, -10);
-	//public static double minimumGravityAttractionRange = Math.pow(10, UniverseSandbox.PRECISION);
+	public static double SPEEDSQUARED = Math.pow(10, 3), scale = 6 * Math.pow(10, -9);
 
 	public static double cameraX = (FRAMEWIDTH / 2), cameraY = (FRAMEHEIGHT / 2);
+	// The camera is at resolution scale. It will contain values typically in
+	// the hundreds, unlike points of mass whose position contains values of
+	// trillions and so on.
 
 	// Universal Constants and Measures
 	public static double G = 6.673 * Math.pow(10, -11); // Newton meters Squared
@@ -72,14 +74,17 @@ public class UniverseSandbox {
 	}
 
 	public void spawnBalls() {
-		spawnSolarSystem(0, 0);
+		// spawnSolarSystem(0, 0);
 		// spawnGalaxy(0, 0);
 		// fun_render_1();
 	}
 
 	private void fun_render_1() {
-		stars.add(new PointOfMass(((2 * FRAMEWIDTH / 10) - (FRAMEWIDTH / 2)) / scale, ((2 * FRAMEHEIGHT / 10) - (FRAMEHEIGHT / 2)) / scale, 0, 0, 8.2 * Math.pow(10, 36), 0, 0, 0, solarradius));
-		spawnGalaxy(((8 * FRAMEWIDTH / 10) - (FRAMEWIDTH / 2)) / scale, ((8 * FRAMEHEIGHT / 10) - (FRAMEHEIGHT / 2)) / scale);
+		stars.add(new PointOfMass(((2 * FRAMEWIDTH / 10) - (FRAMEWIDTH / 2)) / scale,
+				((2 * FRAMEHEIGHT / 10) - (FRAMEHEIGHT / 2)) / scale, 0, 0, 8.2 * Math.pow(10, 36), 0, 0, 0,
+				solarradius));
+		spawnGalaxy(((8 * FRAMEWIDTH / 10) - (FRAMEWIDTH / 2)) / scale,
+				((8 * FRAMEHEIGHT / 10) - (FRAMEHEIGHT / 2)) / scale);
 	}
 
 	// mouse inputs
@@ -100,6 +105,13 @@ public class UniverseSandbox {
 
 		}
 
+		if (Mouse.isButtonDown(3)) { // add stars of random color at the cursor
+			// with random velocity vector
+			stars.add(new PointOfMass((Mouse.getX() - cameraX) / scale, (Mouse.getY() - cameraY) / scale,
+					100000000 * Math.random(), 2 * Math.random() * Math.PI, solarmass, Math.random(), (Math.random() + 1) * .5,
+					(Math.random() + 1) * .5, solarradius));
+		}
+
 		if (Mouse.isButtonDown(1)) {
 			ruler((Mouse.getX() - cameraX) / scale, (Mouse.getY() - cameraY) / scale);
 		} else if (rulerStart) {
@@ -116,7 +128,13 @@ public class UniverseSandbox {
 
 		int mouseWheel = Mouse.getDWheel() / 120;
 		if (mouseWheel != 0) {
+			//double cameraXPre = cameraX / scale;
+			//double cameraYPre = cameraY / scale;
+
+			// fixed to center by default
 			scale *= Math.pow(1.1, mouseWheel);
+
+			// Fix to bottom left corner
 			cameraX = cameraX * Math.pow(1.1, mouseWheel);
 			cameraY = cameraY * Math.pow(1.1, mouseWheel);
 
@@ -345,7 +363,7 @@ public class UniverseSandbox {
 					planet[i][0], planet[i][4] / 255, planet[i][5] / 255, planet[i][6] / 255, planet[i][3]));
 
 		}
-		
+
 		int count = 0;
 		while (count < 700) {
 			double phi = 2 * Math.random() * Math.PI;
@@ -355,19 +373,19 @@ public class UniverseSandbox {
 			double dx = (r * Math.cos(phi));
 			double dy = (r * Math.sin(phi));
 
-			double thisMass = 3 * Math.pow(10,  16);
+			double thisMass = 3 * Math.pow(10, 16);
 
 			double gravA = Math.sqrt((G * (solarmass + thisMass) * SPEEDSQUARED) / (r));
-			
+
 			double red = .5;
 			double green = .3;
 			double blue = .2;
-			
-			stars.add(new PointOfMass((x + dx), (y + dy), gravA, phi + (Math.PI / 2), thisMass, red,
-					green, blue, 50000));
+
+			stars.add(
+					new PointOfMass((x + dx), (y + dy), gravA, phi + (Math.PI / 2), thisMass, red, green, blue, 50000));
 			count++;
 		}
-		
+
 		count = 0;
 		while (count < 200) {
 			double phi = 2 * Math.random() * Math.PI;
@@ -377,16 +395,16 @@ public class UniverseSandbox {
 			double dx = (r * Math.cos(phi));
 			double dy = (r * Math.sin(phi));
 
-			double thisMass = Math.pow(10,  22);
+			double thisMass = Math.pow(10, 22);
 
 			double gravA = Math.sqrt((G * (solarmass + thisMass) * SPEEDSQUARED) / (r));
-			
+
 			double red = .4;
 			double green = .3;
 			double blue = .2;
-			
-			stars.add(new PointOfMass((x + dx), (y + dy), gravA, phi + (Math.PI / 2), thisMass, red,
-					green, blue, 50000));
+
+			stars.add(
+					new PointOfMass((x + dx), (y + dy), gravA, phi + (Math.PI / 2), thisMass, red, green, blue, 50000));
 			count++;
 		}
 	}
