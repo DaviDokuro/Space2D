@@ -19,10 +19,10 @@ import org.lwjgl.*;
 
 public class UniverseSandbox {
 
-	public static double FPS = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 60, RUNTIME = 600000;
+	public static double FPS = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0;
 	public static boolean SCREENCAP = false, RENDERLIMIT = false;
 
-	public static double RENDERSPEED = Math.pow(10, 6), scale = 5 * Math.pow(10, -10);
+	public static double SPEED = 1 * Math.pow(10, 3), scale = 1 * Math.pow(10, -8), FRAMESKIP = 30, RUNTIME = 600000;
 
 	public static double cameraX = (FRAMEWIDTH / 2), cameraY = (FRAMEHEIGHT / 2);
 	// The camera is at resolution scale. It will contain values typically in
@@ -42,7 +42,7 @@ public class UniverseSandbox {
 	boolean rulerStart = false;
 	double rulerX = 0, rulerY = 0; // in meters
 
-	static List<PointOfMass> stars = new ArrayList<PointOfMass>(1);
+	static List<PointOfMass> stars = new ArrayList<PointOfMass>();
 
 	public boolean paused = false;
 
@@ -74,7 +74,7 @@ public class UniverseSandbox {
 	}
 
 	public void spawnBalls() {
-		spawnSolarSystem(0, 0);
+		// spawnSolarSystem(0, 0);
 		// spawnGalaxy(0, 0);
 		// fun_render_1();
 	}
@@ -128,15 +128,26 @@ public class UniverseSandbox {
 
 		int mouseWheel = Mouse.getDWheel() / 120;
 		if (mouseWheel != 0) {
-			//double cameraXPre = cameraX / scale;
-			//double cameraYPre = cameraY / scale;
+			double mouseXPre = (Mouse.getX() - cameraX) / scale;
+			double mouseYPre = (Mouse.getY() - cameraY) / scale;
 
 			// fixed to center by default
 			scale *= Math.pow(1.1, mouseWheel);
+			
+			double camPanX = (((Mouse.getX() - cameraX) / scale) - mouseXPre) * scale;
+			double camPanY = (((Mouse.getY() - cameraY) / scale) - mouseYPre) * scale;
 
 			// Fix to bottom left corner
 			// cameraX = cameraX * Math.pow(1.1, mouseWheel);
 			// cameraY = cameraY * Math.pow(1.1, mouseWheel);
+			
+			// Fix origin to mouse (this was an accident)
+			// cameraX = cameraX + (Mouse.getX() - cameraX) * Math.pow(1.1, mouseWheel);
+			// cameraY = cameraY + (Mouse.getY() - cameraY) * Math.pow(1.1, mouseWheel);
+			
+			// Fix to cursor target
+			cameraX = cameraX + camPanX;
+			cameraY = cameraY + camPanY;
 
 		}
 	}
@@ -245,7 +256,10 @@ public class UniverseSandbox {
 	}
 
 	private void spawnGalaxy(double x, double y) {
-		double number_of_stars = 1000;
+		SPEED = 1 * Math.pow(10, 15);
+		scale = 8 * Math.pow(10, -19);
+		
+		double number_of_stars = 2000;
 
 		double red = 0;
 		double green = 0;
@@ -259,16 +273,15 @@ public class UniverseSandbox {
 		while (count < number_of_stars) {
 			double phi = 2 * Math.random() * Math.PI;
 
-			double r = Math.pow(10, 15) + Math.random() * radius_of_milky_way;
+			double r = Math.pow(10, 19) + Math.random() * radius_of_milky_way;
 
 			double dx = (r * Math.cos(phi));
 			double dy = (r * Math.sin(phi));
 
-			double thisStarMass = solarmass * 100;
+			double thisStarMass = solarmass * 100 * Math.random();
 
-			double blackgrav = Math.sqrt((G * (blackholemass + thisStarMass) * RENDERSPEED) / (r));
-			double extragrav = 0;
-			;
+			double blackgrav = Math.sqrt((G * (blackholemass + thisStarMass)) / (r)) * SPEED;
+			
 
 			if (Math.random() > galaxy_type) {
 				red = 1;
@@ -280,13 +293,16 @@ public class UniverseSandbox {
 				green = (Math.random() + 1) * .5;
 				blue = 1;
 			}
-			stars.add(new PointOfMass((x + dx), (y + dy), blackgrav + extragrav, phi + (Math.PI / 2), thisStarMass, red,
+			stars.add(new PointOfMass((x + dx), (y + dy), blackgrav, phi + (Math.PI / 2), thisStarMass, red,
 					green, blue, solarradius));
 			count++;
 		}
 	}
 
 	private void spawnSolarSystem(double x, double y) {
+		
+		SPEED = 1 * Math.pow(10, 5);
+		scale = 2 * Math.pow(10, -10);
 
 		double planet[][] = new double[8][7]; // planets 1 through 8; 1=mass,
 												// 2=velocity, 3=orbit radius,
@@ -359,7 +375,7 @@ public class UniverseSandbox {
 		stars.add(new PointOfMass(x, y, 0, 0, solarmass, 255, 255, 0, solarradius));
 
 		for (int i = 0; i < 8; i++) {
-			stars.add(new PointOfMass((x + planet[i][2]), 0, planet[i][1] * Math.sqrt(RENDERSPEED), Math.PI / 2,
+			stars.add(new PointOfMass((x + planet[i][2]), 0, planet[i][1] * SPEED, Math.PI / 2,
 					planet[i][0], planet[i][4] / 255, planet[i][5] / 255, planet[i][6] / 255, planet[i][3]));
 
 		}
@@ -375,9 +391,9 @@ public class UniverseSandbox {
 			double dx = (r * Math.cos(phi));
 			double dy = (r * Math.sin(phi));
 
-			double thisMass = 3 * Math.pow(10, 16);
+			double thisMass = 5 * Math.pow(10, 16) * Math.random();
 
-			double gravA = Math.sqrt((G * (solarmass + thisMass) * RENDERSPEED) / (r));
+			double gravA = Math.sqrt((G * (solarmass + thisMass)) / (r)) * SPEED;
 
 			double red = .5;
 			double green = .3;
@@ -401,7 +417,7 @@ public class UniverseSandbox {
 
 			double thisMass = Math.pow(10, 22);
 
-			double gravA = Math.sqrt((G * (solarmass + thisMass) * RENDERSPEED) / (r));
+			double gravA = Math.sqrt((G * (solarmass + thisMass)) / (r)) * SPEED;
 
 			double red = .4;
 			double green = .3;
@@ -524,7 +540,7 @@ class PointOfMass {
 
 	private int SEGMENTS = (int) (360 / drawAngle);
 
-	public double x, y, vx, vy, vxn, vyn, m;
+	public double x, y, vx, vy, dvx, dvy, m;
 	private double colorRed, colorBlue, colorGreen;
 	private double radius;
 
@@ -537,8 +553,8 @@ class PointOfMass {
 		this.y = y;
 		this.vx = v * Math.cos(theta);
 		this.vy = v * Math.sin(theta);
-		this.vxn = 0;
-		this.vyn = 0;
+		this.dvx = 0;
+		this.dvy = 0;
 		this.m = mass;
 		this.radius = radius;
 
@@ -575,31 +591,33 @@ class PointOfMass {
 
 	public void attractedTo(PointOfMass that) {
 		if (that != this) {
-			if (that.vxn == 0 && that.vyn == 0) {
-				that.vxn = that.vx;
-				that.vyn = that.vy;
+			if (that.dvx == 0 && that.dvy == 0) {
+				that.dvx = that.vx;
+				that.dvy = that.vy;
 			}
 
-			if (vxn == 0 && vyn == 0) {
-				vxn = vx;
-				vyn = vy;
+			if (dvx == 0 && dvy == 0) {
+				dvx = vx;
+				dvy = vy;
 			}
+			
+			double dx = (that.x - this.x);
+			double dy = (that.y - this.y);
+			
+			double dx2 = dx * dx;
+			double dy2 = dy * dy;
 
-			double dx2 = (this.x - that.x) * (this.x - that.x);
-			double dy2 = (this.y - that.y) * (this.y - that.y);
-
-			effGrav(that, dx2 + dy2);
+			effGrav(that, dx, dy, dx2 + dy2);
 
 		}
 	}
 
-	public void effGrav(PointOfMass that, double r2) {
+	public void effGrav(PointOfMass that, double dx, double dy, double r2) {
 		double G = UniverseSandbox.G;
 
 		double h = Math.sqrt(r2);
-
-		double dx = that.x - this.x;
-		double dy = that.y - this.y;
+		
+		double speedSquared = UniverseSandbox.SPEED * UniverseSandbox.SPEED;
 
 		double fx = 0;
 		double fy = 0;
@@ -608,22 +626,22 @@ class PointOfMass {
 			fx = (G * m * that.m * (dx / h)) / (r2);
 			fy = (G * m * that.m * (dy / h)) / (r2);
 
-			that.vxn -= (fx * UniverseSandbox.RENDERSPEED) / (that.m);
-			that.vyn -= (fy * UniverseSandbox.RENDERSPEED) / (that.m);
+			that.dvx -= (fx * speedSquared) / (that.m);
+			that.dvy -= (fy * speedSquared) / (that.m);
 
-			vxn += (fx * UniverseSandbox.RENDERSPEED) / (m);
-			vyn += (fy * UniverseSandbox.RENDERSPEED) / (m);
+			dvx += (fx * speedSquared) / (m);
+			dvy += (fy * speedSquared) / (m);
 		} else {
 			if (this.m >= that.m) {
-				this.vxn = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
-				this.vyn = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
+				this.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
+				this.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
 				this.m += that.m;
 				this.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
 				UniverseSandbox.stars.remove(that);
-				tellTheCircleHowToBeDrawn();
+				this.tellTheCircleHowToBeDrawn();
 			} else {
-				that.vxn = ((that.m * that.vx) + (this.m * this.vx)) / (that.m * 2);
-				that.vyn = ((that.m * that.vy) + (this.m * this.vy)) / (that.m * 2);
+				that.dvx = ((that.m * that.vx) + (this.m * this.vx)) / (that.m * 2);
+				that.dvy = ((that.m * that.vy) + (this.m * this.vy)) / (that.m * 2);
 				that.m += this.m;
 				that.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
 				UniverseSandbox.stars.remove(this);
@@ -634,10 +652,10 @@ class PointOfMass {
 	}
 
 	public void update() {
-		if (vxn != 0 && vyn != 0) {
-			vx = vxn;
-			vy = vyn;
-			vxn = vyn = 0;
+		if (dvx != 0 && dvy != 0) {
+			vx = dvx;
+			vy = dvy;
+			dvx = dvy = 0;
 		}
 
 		x += vx;
