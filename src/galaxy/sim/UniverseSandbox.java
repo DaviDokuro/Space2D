@@ -24,7 +24,7 @@ public class UniverseSandbox {
 
 	public static double SPEED = 1 * Math.pow(10, 3), scale = 1 * Math.pow(10, -8), FRAMESKIP = 30, RUNTIME = 600000;
 
-	public static double cameraX = (FRAMEWIDTH / 2), cameraY = (FRAMEHEIGHT / 2);
+	public static double cameraX = (Display.getWidth() / 2), cameraY = (Display.getHeight() / 2);
 	// The camera is at resolution scale. It will contain values typically in
 	// the hundreds, unlike points of mass whose position contains values of
 	// trillions and so on.
@@ -65,26 +65,14 @@ public class UniverseSandbox {
 		new UniverseSandbox();
 	}
 
-	public void init() {
-		// always here code OGL
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, FRAMEWIDTH, 0, FRAMEHEIGHT, 1, -1);
-		glMatrixMode(GL_MODELVIEW);
-	}
-
-	public void spawnBalls() {
-		// spawnSolarSystem(0, 0);
-		// spawnGalaxy(0, 0);
-		// fun_render_1();
-	}
+	
 
 	private void fun_render_1() {
-		stars.add(new PointOfMass(((2 * FRAMEWIDTH / 10) - (FRAMEWIDTH / 2)) / scale,
-				((2 * FRAMEHEIGHT / 10) - (FRAMEHEIGHT / 2)) / scale, 0, 0, 8.2 * Math.pow(10, 36), 0, 0, 0,
+		stars.add(new PointOfMass(((2 * Display.getWidth() / 10) - (Display.getWidth() / 2)) / scale,
+				((2 * Display.getHeight() / 10) - (Display.getHeight() / 2)) / scale, 0, 0, 8.2 * Math.pow(10, 36), 0, 0, 0,
 				solarradius));
-		spawnGalaxy(((8 * FRAMEWIDTH / 10) - (FRAMEWIDTH / 2)) / scale,
-				((8 * FRAMEHEIGHT / 10) - (FRAMEHEIGHT / 2)) / scale);
+		spawnGalaxy(((8 * Display.getWidth() / 10) - (Display.getWidth() / 2)) / scale,
+				((8 * Display.getHeight() / 10) - (Display.getHeight() / 2)) / scale);
 	}
 
 	// mouse inputs
@@ -136,30 +124,22 @@ public class UniverseSandbox {
 			
 			double camPanX = (((Mouse.getX() - cameraX) / scale) - mouseXPre) * scale;
 			double camPanY = (((Mouse.getY() - cameraY) / scale) - mouseYPre) * scale;
-
-			// Fix to bottom left corner
-			// cameraX = cameraX * Math.pow(1.1, mouseWheel);
-			// cameraY = cameraY * Math.pow(1.1, mouseWheel);
-			
-			// Fix origin to mouse (this was an accident)
-			// cameraX = cameraX + (Mouse.getX() - cameraX) * Math.pow(1.1, mouseWheel);
-			// cameraY = cameraY + (Mouse.getY() - cameraY) * Math.pow(1.1, mouseWheel);
 			
 			// Fix to cursor target
-			cameraX = cameraX + camPanX;
-			cameraY = cameraY + camPanY;
+			cameraX += camPanX;
+			cameraY += camPanY;
 
 		}
 	}
 
 	// keyboard inputs
-	public void keypresses() {
+	public void keypresses(){
 		if (Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
 			close();
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_X)) {
-			stars.add(new PointOfMass(FRAMEWIDTH / (scale * 2) - (cameraX / scale),
-					FRAMEHEIGHT / (scale * 2) - (cameraY / scale), 0.1 * Math.random(), 2 * Math.random() * Math.PI, 1,
+			stars.add(new PointOfMass(Display.getWidth() / (scale * 2) - (cameraX / scale),
+					Display.getHeight() / (scale * 2) - (cameraY / scale), 0.1 * Math.random(), 2 * Math.random() * Math.PI, 1,
 					Math.random(), Math.random(), Math.random(), solarradius));
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_V)) {
@@ -185,16 +165,24 @@ public class UniverseSandbox {
 		if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
 			cameraY += 10;
 		}
+		/*
+		if (Keyboard.isKeyDown(Keyboard.KEY_ADD)) {
+			SPEED *= 1.1;
+		}
+		if (Keyboard.isKeyDown(Keyboard.KEY_SUBTRACT)) {
+			SPEED /= 1.1;
+		}
+		*/
 		if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
-			stars.add(new PointOfMass(((FRAMEWIDTH * Math.random()) / scale) - (cameraX / scale),
-					((FRAMEHEIGHT * Math.random()) / scale) - (cameraY / scale), 100000000 * Math.random(),
+			stars.add(new PointOfMass(((Display.getWidth() * Math.random()) / scale) - (cameraX / scale),
+					((Display.getHeight() * Math.random()) / scale) - (cameraY / scale), 100000000 * Math.random(),
 					2 * Math.random() * Math.PI, solarmass, Math.random(), Math.random(), Math.random(), solarradius));
 
 		}
 		while (Keyboard.next()) {
 			if (Keyboard.getEventKey() == Keyboard.KEY_C && Keyboard.getEventKeyState()) {
-				stars.add(new PointOfMass((FRAMEWIDTH / (2 * scale)) - (cameraX / scale),
-						(FRAMEHEIGHT / (2 * scale)) - (cameraY / scale), 5 * Math.random(), 2 * Math.random() * Math.PI,
+				stars.add(new PointOfMass((Display.getWidth() / (2 * scale)) - (cameraX / scale),
+						(Display.getHeight() / (2 * scale)) - (cameraY / scale), 5 * Math.random(), 2 * Math.random() * Math.PI,
 						solarmass, Math.random(), Math.random(), Math.random(), solarradius));
 			}
 			if (Keyboard.getEventKey() == Keyboard.KEY_S && Keyboard.getEventKeyState()) {
@@ -208,6 +196,10 @@ public class UniverseSandbox {
 			if (Keyboard.getEventKey() == Keyboard.KEY_F && Keyboard.getEventKeyState()) {
 				spawnCluster((Mouse.getX() - cameraX) / scale, (Mouse.getY() - cameraY) / scale);
 			}
+			
+			if (Keyboard.getEventKey() == Keyboard.KEY_D && Keyboard.getEventKeyState()) {
+				spawnSolarSystem((Mouse.getX() - cameraX) / scale, (Mouse.getY() - cameraY) / scale);
+			}
 
 			if (Keyboard.getEventKey() == Keyboard.KEY_P && Keyboard.getEventKeyState()) {
 				paused = !paused;
@@ -216,6 +208,20 @@ public class UniverseSandbox {
 				stars = new ArrayList<PointOfMass>(1);
 				spawnBalls();
 			}
+			if (Keyboard.getEventKey() == Keyboard.KEY_F11 && Keyboard.getEventKeyState()) {
+				if(Display.isFullscreen()) {
+					setDisplayMode(1920, 1080, false);
+					glViewport(0, 0, Display.getWidth(), Display.getHeight());
+					
+				}
+				else {					
+					setDisplayMode(3840, 2160, true);
+					glViewport(0, 0, Display.getWidth(), Display.getHeight());
+					
+				}
+			}
+			
+				
 		}
 	}
 
@@ -230,6 +236,19 @@ public class UniverseSandbox {
 
 	}
 
+	public void spawnBalls() {
+		//SPEED = 1 * Math.pow(10, 3);
+		//scale = 2 * Math.pow(10, -10);
+		// spawnSolarSystem(0, 0);
+		
+		//SPEED = 1 * Math.pow(10, 15);
+		//scale = 8 * Math.pow(10, -19);
+		// spawnGalaxy(0, 0);
+		
+		
+		// fun_render_1();
+	}
+	
 	private void spawnCluster(double d, double e) {
 		double starmass = solarmass;
 		double radius = Math.pow(10, 12);
@@ -256,8 +275,7 @@ public class UniverseSandbox {
 	}
 
 	private void spawnGalaxy(double x, double y) {
-		SPEED = 1 * Math.pow(10, 15);
-		scale = 8 * Math.pow(10, -19);
+		
 		
 		double number_of_stars = 2000;
 
@@ -301,8 +319,7 @@ public class UniverseSandbox {
 
 	private void spawnSolarSystem(double x, double y) {
 		
-		SPEED = 1 * Math.pow(10, 5);
-		scale = 2 * Math.pow(10, -10);
+
 
 		double planet[][] = new double[8][7]; // planets 1 through 8; 1=mass,
 												// 2=velocity, 3=orbit radius,
@@ -375,7 +392,7 @@ public class UniverseSandbox {
 		stars.add(new PointOfMass(x, y, 0, 0, solarmass, 255, 255, 0, solarradius));
 
 		for (int i = 0; i < 8; i++) {
-			stars.add(new PointOfMass((x + planet[i][2]), 0, planet[i][1] * SPEED, Math.PI / 2,
+			stars.add(new PointOfMass((x + planet[i][2]), y, planet[i][1] * SPEED, Math.PI / 2,
 					planet[i][0], planet[i][4] / 255, planet[i][5] / 255, planet[i][6] / 255, planet[i][3]));
 
 		}
@@ -383,7 +400,7 @@ public class UniverseSandbox {
 		
 		//Add asteroid belt
 		int count = 0;
-		while (count < 1000) {
+		while (count < 800) {
 			double phi = 2 * Math.random() * Math.PI;
 
 			double r = (3 * Math.pow(10, 11)) + (Math.random() * 4 * Math.pow(10, 11));
@@ -405,9 +422,9 @@ public class UniverseSandbox {
 		}
 
 		
-		//Add Oort Cloud
+		//Add Keiper Cloud
 		count = 0;
-		while (count < 500) {
+		while (count < 200) {
 			double phi = 2 * Math.random() * Math.PI;
 
 			double r = (30 * planet[2][2]) + (Math.random() * 20 * planet[2][2]);
@@ -431,10 +448,8 @@ public class UniverseSandbox {
 
 	public void efficientComp() {
 		for (int i = 0; i < stars.size() - 1; i++) {
-			PointOfMass a = stars.get(i);
 			for (int j = i + 1; j < stars.size(); j++) {
-				PointOfMass b = stars.get(j);
-				a.attractedTo(b);
+				stars.get(i).attractedTo(stars.get(j));
 			}
 		}
 		for (PointOfMass b : stars) {
@@ -456,22 +471,22 @@ public class UniverseSandbox {
 	private void screenShot() {
 
 		// Creating an rbg array of total pixels
-		int[] pixels = new int[(int) (FRAMEWIDTH * FRAMEHEIGHT)];
+		int[] pixels = new int[(int) (Display.getWidth() * Display.getHeight())];
 		int bindex;
 		// allocate space for RBG pixels
-		ByteBuffer fb = ByteBuffer.allocateDirect((int) (FRAMEWIDTH * FRAMEHEIGHT * 3));
+		ByteBuffer fb = ByteBuffer.allocateDirect((int) (Display.getWidth() * Display.getHeight() * 3));
 
 		// grab a copy of the current frame contents as RGB
-		glReadPixels(0, 0, (int) FRAMEWIDTH, (int) FRAMEHEIGHT, GL_RGB, GL_UNSIGNED_BYTE, fb);
+		glReadPixels(0, 0, (int) Display.getWidth(), (int) Display.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, fb);
 
-		BufferedImage imageIn = new BufferedImage((int) FRAMEWIDTH, (int) FRAMEHEIGHT, BufferedImage.TYPE_INT_RGB);
+		BufferedImage imageIn = new BufferedImage((int) Display.getWidth(), (int) Display.getHeight(), BufferedImage.TYPE_INT_RGB);
 		// convert RGB data in ByteBuffer to integer array
 		for (int i = 0; i < pixels.length; i++) {
 			bindex = i * 3;
 			pixels[i] = ((fb.get(bindex) << 16)) + ((fb.get(bindex + 1) << 8)) + ((fb.get(bindex + 2) << 0));
 		}
 		// Allocate colored pixel to buffered Image
-		imageIn.setRGB(0, 0, (int) FRAMEWIDTH, (int) FRAMEHEIGHT, pixels, 0, (int) FRAMEWIDTH);
+		imageIn.setRGB(0, 0, (int) Display.getWidth(), (int) Display.getHeight(), pixels, 0, (int) Display.getWidth());
 
 		// Creating the transformation direction (horizontal)
 		AffineTransform at = AffineTransform.getScaleInstance(1, -1);
@@ -487,6 +502,76 @@ public class UniverseSandbox {
 			System.out.println("ScreenShot() exception: " + e);
 		}
 	}
+	
+	/**
+	 * Set the display mode to be used 
+	 * 
+	 * @param width The width of the display required
+	 * @param height The height of the display required
+	 * @param fullscreen True if we want fullscreen mode
+	 */
+	public void setDisplayMode(int width, int height, boolean fullscreen) {
+	 
+	    // return if requested DisplayMode is already set
+	    if ((Display.getDisplayMode().getWidth() == width) && 
+	        (Display.getDisplayMode().getHeight() == height) && 
+	    (Display.isFullscreen() == fullscreen)) {
+	        return;
+	    }
+	 
+	    try {
+	        DisplayMode targetDisplayMode = null;
+	         
+	    if (fullscreen) {
+	        DisplayMode[] modes = Display.getAvailableDisplayModes();
+	        int freq = 0;
+	                 
+	        for (int i=0;i<modes.length;i++) {
+	            DisplayMode current = modes[i];
+	                     
+	        if ((current.getWidth() == width) && (current.getHeight() == height)) {
+	            if ((targetDisplayMode == null) || (current.getFrequency() >= freq)) {
+	                if ((targetDisplayMode == null) || (current.getBitsPerPixel() > targetDisplayMode.getBitsPerPixel())) {
+	                targetDisplayMode = current;
+	                freq = targetDisplayMode.getFrequency();
+	                        }
+	                    }
+	 
+	            // if we've found a match for bpp and frequence against the 
+	            // original display mode then it's probably best to go for this one
+	            // since it's most likely compatible with the monitor
+	            if ((current.getBitsPerPixel() == Display.getDesktopDisplayMode().getBitsPerPixel()) &&
+	                        (current.getFrequency() == Display.getDesktopDisplayMode().getFrequency())) {
+	                            targetDisplayMode = current;
+	                            break;
+	                    }
+	                }
+	            }
+	        } else {
+	            targetDisplayMode = new DisplayMode(width,height);
+	        }
+	 
+	        if (targetDisplayMode == null) {
+	            System.out.println("Failed to find value mode: "+width+"x"+height+" fs="+fullscreen);
+	            return;
+	        }
+	 
+	        Display.setDisplayMode(targetDisplayMode);
+	        Display.setFullscreen(fullscreen);
+	             
+	    } catch (LWJGLException e) {
+	        System.out.println("Unable to setup mode "+width+"x"+height+" fullscreen="+fullscreen + e);
+	    }
+	}
+	
+	public void init() {
+		// always here code OGL
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, Display.getWidth(), 0, Display.getHeight(), 1, -1);
+		glViewport(0, 0, Display.getWidth(), Display.getHeight());
+		glMatrixMode(GL_MODELVIEW);
+	}
 
 	public void close() {
 
@@ -499,6 +584,8 @@ public class UniverseSandbox {
 		try {
 			Display.setDisplayMode(new DisplayMode((int) FRAMEWIDTH, (int) FRAMEHEIGHT));
 			Display.setTitle("Play with the universe!");
+			Display.setResizable(true);
+			Display.setVSyncEnabled(true);
 			Display.create();
 		} catch (LWJGLException e) {
 			e.printStackTrace();
@@ -528,6 +615,10 @@ public class UniverseSandbox {
 			}
 			// loop display
 			Display.sync((int) FPS);
+			
+			if (Display.wasResized()) {
+				glViewport(0, 0, Display.getWidth(), Display.getHeight());
+			}
 		}
 
 		close();
@@ -652,11 +743,9 @@ class PointOfMass {
 	}
 
 	public void update() {
-		if (dvx != 0 && dvy != 0) {
-			vx = dvx;
-			vy = dvy;
-			dvx = dvy = 0;
-		}
+		vx = dvx;
+		vy = dvy;
+		dvx = dvy = 0;
 
 		x += vx;
 		y += vy;
