@@ -24,7 +24,7 @@ public class UniverseSandbox {
 
 	public static double SPEED = 1 * Math.pow(10, 3), scale = 1 * Math.pow(10, -8), FRAMESKIP = 30, RUNTIME = 600000;
 
-	public static double cameraX = (Display.getWidth() / 2), cameraY = (Display.getHeight() / 2);
+	public static double cameraX = (FRAMEWIDTH / 2), cameraY = (FRAMEHEIGHT / 2);
 	// The camera is at resolution scale. It will contain values typically in
 	// the hundreds, unlike points of mass whose position contains values of
 	// trillions and so on.
@@ -165,14 +165,20 @@ public class UniverseSandbox {
 		if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
 			cameraY += 10;
 		}
-		/*
+		
 		if (Keyboard.isKeyDown(Keyboard.KEY_ADD)) {
-			SPEED *= 1.1;
+			
+			scale *= 1.1;
+			cameraX *= 1.1;
+			cameraY *= 1.1;
+			
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_SUBTRACT)) {
-			SPEED /= 1.1;
+			scale /= 1.1;
+			cameraX /= 1.1;
+			cameraY /= 1.1;
 		}
-		*/
+		
 		if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
 			stars.add(new PointOfMass(((Display.getWidth() * Math.random()) / scale) - (cameraX / scale),
 					((Display.getHeight() * Math.random()) / scale) - (cameraY / scale), 100000000 * Math.random(),
@@ -237,13 +243,13 @@ public class UniverseSandbox {
 	}
 
 	public void spawnBalls() {
-		//SPEED = 1 * Math.pow(10, 3);
-		//scale = 2 * Math.pow(10, -10);
-		// spawnSolarSystem(0, 0);
+		SPEED = 1 * Math.pow(10, 5);
+		scale = 2 * Math.pow(10, -10);
+		spawnSolarSystem(0, 0);
 		
-		//SPEED = 1 * Math.pow(10, 15);
+		//SPEED = 1 * Math.pow(10, 14);
 		//scale = 8 * Math.pow(10, -19);
-		// spawnGalaxy(0, 0);
+		//spawnGalaxy(0, 0);
 		
 		
 		// fun_render_1();
@@ -277,7 +283,7 @@ public class UniverseSandbox {
 	private void spawnGalaxy(double x, double y) {
 		
 		
-		double number_of_stars = 2000;
+		double number_of_stars = 1000;
 
 		double red = 0;
 		double green = 0;
@@ -422,7 +428,7 @@ public class UniverseSandbox {
 		}
 
 		
-		//Add Keiper Cloud
+		//Add Keiper belt
 		count = 0;
 		while (count < 200) {
 			double phi = 2 * Math.random() * Math.PI;
@@ -447,6 +453,12 @@ public class UniverseSandbox {
 	}
 
 	public void efficientComp() {
+		
+		for (int i = 0; i < stars.size() - 1; i++) {
+			for (int j = i + 1; j < stars.size(); j++) {
+				stars.get(i).collidesWith(stars.get(j));
+			}
+		}
 		for (int i = 0; i < stars.size() - 1; i++) {
 			for (int j = i + 1; j < stars.size(); j++) {
 				stars.get(i).attractedTo(stars.get(j));
@@ -633,7 +645,7 @@ class PointOfMass {
 
 	public double x, y, vx, vy, dvx, dvy, m;
 	private double colorRed, colorBlue, colorGreen;
-	private double radius;
+	private double radius, minrad;
 
 	private double[][] ballPoints = new double[SEGMENTS][2];
 	private double[][] ballPointsSmall = new double[SEGMENTS][2];
@@ -654,7 +666,7 @@ class PointOfMass {
 		colorBlue = blue;
 
 		tellTheCircleHowToBeDrawn();
-		tellTheCircleHowToBeDrawn(1);
+		tellTheCircleHowToBeDrawn(minrad = 1);
 	}
 
 	private void tellTheCircleHowToBeDrawn() {
@@ -710,36 +722,50 @@ class PointOfMass {
 		
 		double speedSquared = UniverseSandbox.SPEED * UniverseSandbox.SPEED;
 
-		double fx = 0;
-		double fy = 0;
+		double fx = (G * m * that.m * (dx / h)) / (r2);
+		double fy = (G * m * that.m * (dy / h)) / (r2);
 
-		if ((h > this.radius) && (h > that.radius)) {
-			fx = (G * m * that.m * (dx / h)) / (r2);
-			fy = (G * m * that.m * (dy / h)) / (r2);
+		that.dvx -= (fx * speedSquared) / (that.m);
+		that.dvy -= (fy * speedSquared) / (that.m);
 
-			that.dvx -= (fx * speedSquared) / (that.m);
-			that.dvy -= (fy * speedSquared) / (that.m);
+		dvx += (fx * speedSquared) / (m);
+		dvy += (fy * speedSquared) / (m);
+		
 
-			dvx += (fx * speedSquared) / (m);
-			dvy += (fy * speedSquared) / (m);
-		} else {
-			if (this.m >= that.m) {
-				this.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
-				this.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
-				this.m += that.m;
-				this.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
-				UniverseSandbox.stars.remove(that);
-				this.tellTheCircleHowToBeDrawn();
-			} else {
-				that.dvx = ((that.m * that.vx) + (this.m * this.vx)) / (that.m * 2);
-				that.dvy = ((that.m * that.vy) + (this.m * this.vy)) / (that.m * 2);
-				that.m += this.m;
-				that.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
-				UniverseSandbox.stars.remove(this);
-				that.tellTheCircleHowToBeDrawn();
+	}
+	
+	public void collidesWith(PointOfMass that) {
+		if (that != this) {
+						
+			double dx = (that.x - this.x);
+			double dy = (that.y - this.y);
+			
+			double dx2 = dx * dx;
+			double dy2 = dy * dy;
+			
+			double h = Math.sqrt(dx2 + dy2);
+			
+			if ((h <= this.radius) || (h <= that.radius)) {
+			
+				if (this.m >= that.m) {
+					this.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
+					this.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
+					this.m += that.m;
+					this.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
+					this.tellTheCircleHowToBeDrawn();
+					UniverseSandbox.stars.remove(that);
+				} else {
+					that.dvx = ((that.m * that.vx) + (this.m * this.vx)) / (that.m * 2);
+					that.dvy = ((that.m * that.vy) + (this.m * this.vy)) / (that.m * 2);
+					that.m += this.m;
+					that.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
+					that.tellTheCircleHowToBeDrawn();
+					UniverseSandbox.stars.remove(this);
+				}
 			}
-		}
 
+		}
+		
 	}
 
 	public void update() {
@@ -761,7 +787,7 @@ class PointOfMass {
 
 		double radiusToDraw = radius * UniverseSandbox.scale;
 
-		if (radiusToDraw < 1) {
+		if (radiusToDraw < minrad) {
 			glBegin(GL_POLYGON);
 			for (int i = 0; i < SEGMENTS; i++) {
 				glVertex2i((int) (xToDraw + ballPointsSmall[i][0]), (int) (yToDraw + ballPointsSmall[i][1]));
