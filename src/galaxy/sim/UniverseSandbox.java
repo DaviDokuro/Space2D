@@ -165,12 +165,13 @@ public class UniverseSandbox {
 		}
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_ADD)) {
-
 			SPEED *= 1.1;
+			System.out.println(SPEED);
 
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_SUBTRACT)) {
 			SPEED /= 1.1;
+			System.out.println(SPEED);
 		}
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
@@ -717,20 +718,31 @@ class PointOfMass {
 		dvy += (fy * UniverseSandbox.SPEED) / (m);
 
 	}
+	
+	public boolean checkTrec(PointOfMass that) {
+		// add code to do something
+		// hopefully to prevent garbage spewing everywhere
+		
+		double dx = (that.x - this.x);
+		double dy = (that.y - this.y);
+
+		double dx2 = dx * dx;
+		double dy2 = dy * dy;
+
+		double h = Math.sqrt((dx2 + dy2));
+		
+		if ((h <= this.radius) || (h <= that.radius)) {
+			return true;
+		}
+		
+		
+		return false;
+		
+	}
 
 	public void collidesWith(PointOfMass that) {
 		if (that != this) {
-
-			double dx = (that.x - this.x);
-			double dy = (that.y - this.y);
-
-			double dx2 = dx * dx;
-			double dy2 = dy * dy;
-
-			double h = Math.sqrt(dx2 + dy2);
-
-			if ((h <= this.radius) || (h <= that.radius)) {
-
+			if (checkTrec(that)) {
 				if (this.m >= that.m) {
 					this.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
 					this.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
