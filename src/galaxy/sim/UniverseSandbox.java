@@ -441,18 +441,31 @@ public class UniverseSandbox {
 
 	public void efficientComp() {
 
+		
+		
 		for (int i = 0; i < stars.size() - 1; i++) {
 			for (int j = i + 1; j < stars.size(); j++) {
 				stars.get(i).collidesWith(stars.get(j));
 			}
 		}
+		
+		int starsPrev = stars.size();		
+		for (int i = 0; i < stars.size(); i++) {
+			if (starsPrev < stars.size()) {
+				i -= 1;
+			}
+			stars.get(i).collisionUpdate();
+			starsPrev = stars.size();	
+			
+		}
+		
 		for (int i = 0; i < stars.size() - 1; i++) {
 			for (int j = i + 1; j < stars.size(); j++) {
 				stars.get(i).attractedTo(stars.get(j));
 			}
 		}
 		for (PointOfMass b : stars) {
-			b.update();
+			b.positionUpdate();
 		}
 	}
 
@@ -494,6 +507,7 @@ public class UniverseSandbox {
 		}
 	}
 
+	// Found this code online, works well but may need modification
 	/**
 	 * Set the display mode to be used
 	 * 
@@ -635,6 +649,8 @@ class PointOfMass {
 	private double colorRed, colorBlue, colorGreen;
 	private double radius, minrad;
 
+	private boolean eaten = false;
+	
 	private double[][] ballPoints = new double[SEGMENTS][2];
 	private double[][] ballPointsSmall = new double[SEGMENTS][2];
 
@@ -733,8 +749,7 @@ class PointOfMass {
 		
 		if ((h <= this.radius) || (h <= that.radius)) {
 			return true;
-		}
-		
+		}		
 		
 		return false;
 		
@@ -742,29 +757,35 @@ class PointOfMass {
 
 	public void collidesWith(PointOfMass that) {
 		if (that != this) {
-			if (checkTrec(that)) {
+			if (!this.eaten && !that.eaten && checkTrec(that)) {
 				if (this.m >= that.m) {
 					this.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
 					this.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
 					this.m += that.m;
 					this.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
-					UniverseSandbox.stars.remove(that);
+					that.eaten = true;
+					//UniverseSandbox.stars.remove(that);
 					this.tellTheCircleHowToBeDrawn();
 				} else {
 					that.dvx = ((that.m * that.vx) + (this.m * this.vx)) / (that.m * 2);
 					that.dvy = ((that.m * that.vy) + (this.m * this.vy)) / (that.m * 2);
 					that.m += this.m;
 					that.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
-					UniverseSandbox.stars.remove(this);
+					this.eaten = true;
+					//UniverseSandbox.stars.remove(this);
 					that.tellTheCircleHowToBeDrawn();
 				}
 			}
-
 		}
-
+	}
+	
+	public void collisionUpdate() {
+		if( eaten ) {
+			UniverseSandbox.stars.remove(this);
+		}
 	}
 
-	public void update() {
+	public void positionUpdate() {
 		vx = dvx;
 		vy = dvy;
 		dvx = dvy = 0;
