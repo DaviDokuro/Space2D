@@ -65,6 +65,7 @@ public class UniverseSandbox {
 		new UniverseSandbox();
 	}
 
+	@SuppressWarnings("unused")
 	private void fun_render_1() {
 		stars.add(new PointOfMass(((2 * Display.getWidth() / 10) - (Display.getWidth() / 2)) / scale,
 				((2 * Display.getHeight() / 10) - (Display.getHeight() / 2)) / scale, 0, 0, 8.2 * Math.pow(10, 36), 0,
