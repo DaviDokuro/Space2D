@@ -207,7 +207,7 @@ public class UniverseSandbox {
 				paused = !paused;
 			}
 			if (Keyboard.getEventKey() == Keyboard.KEY_R && Keyboard.getEventKeyState()) {
-				stars = new ArrayList<PointOfMass>(1);
+				stars = new ArrayList<PointOfMass>();
 				spawnBalls();
 			}
 			if (Keyboard.getEventKey() == Keyboard.KEY_F11 && Keyboard.getEventKeyState()) {
@@ -383,14 +383,11 @@ public class UniverseSandbox {
 		planet[7][4] = 62;
 		planet[7][5] = 93;
 		planet[7][6] = 226;
-
-		stars.add(new PointOfMass(x, y, 0, 0, solarmass, 255, 255, 0, solarradius));
-
-		for (int i = 0; i < 8; i++) {
-			stars.add(new PointOfMass((x + planet[i][2]), y, planet[i][1], Math.PI / 2, planet[i][0],
-					planet[i][4] / 255, planet[i][5] / 255, planet[i][6] / 255, planet[i][3]));
-
-		}
+	
+		
+		// add moon?
+		stars.add(new PointOfMass((x + planet[2][2] + 385000000.0), y, planet[2][1] + 1023.056, Math.PI / 2, 7.34767309 * Math.pow(10, 22),
+				1, 1, 1, 1737000.0));
 
 		// Add asteroid belt
 		int count = 0;
@@ -437,6 +434,18 @@ public class UniverseSandbox {
 					new PointOfMass((x + dx), (y + dy), gravA, phi + (Math.PI / 2), thisMass, red, green, blue, 50000));
 			count++;
 		}
+
+		// add planets
+		for (int i = 0; i < 8; i++) {
+			stars.add(new PointOfMass((x + planet[i][2]), y, planet[i][1], Math.PI / 2, planet[i][0],
+					planet[i][4] / 255, planet[i][5] / 255, planet[i][6] / 255, planet[i][3]));
+
+		}
+		
+		// add sun
+		stars.add(new PointOfMass(x, y, 0, 0, solarmass, 255, 255, 0, solarradius));
+		
+		
 	}
 
 	public void efficientComp() {
@@ -629,7 +638,7 @@ public class UniverseSandbox {
 			}
 			// loop display
 			Display.sync((int) FPS);
-
+			Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + " Scale: " + scale + " Speed: " + SPEED);
 			if (Display.wasResized()) {
 				glViewport(0, 0, Display.getWidth(), Display.getHeight());
 			}
@@ -696,6 +705,56 @@ class PointOfMass {
 		return false;
 	}
 
+	
+	
+	public boolean checkTrec(PointOfMass that) {
+		// add code to do something
+		// hopefully to prevent garbage spewing everywhere
+		
+		double dx = (that.x - this.x);
+		double dy = (that.y - this.y);
+
+		double dx2 = dx * dx;
+		double dy2 = dy * dy;
+
+		double h = Math.sqrt((dx2 + dy2));
+		
+		if ((h <= this.radius) || (h <= that.radius)) {
+			return true;
+		}		
+		
+		return false;
+		
+	}
+
+	public void collidesWith(PointOfMass that) {
+		if (that != this) {
+			if (!this.eaten && !that.eaten && checkTrec(that)) {
+				if (this.m >= that.m) {
+					this.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
+					this.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
+					this.m += that.m;
+					this.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
+					that.eaten = true;
+					this.tellTheCircleHowToBeDrawn();
+				} else {
+					that.dvx = ((that.m * that.vx) + (this.m * this.vx)) / (that.m * 2);
+					that.dvy = ((that.m * that.vy) + (this.m * this.vy)) / (that.m * 2);
+					that.m += this.m;
+					that.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
+					this.eaten = true;
+					that.tellTheCircleHowToBeDrawn();
+				}
+			}
+		}
+	}
+	
+	public void collisionUpdate() {
+		if( eaten ) {
+			UniverseSandbox.stars.remove(this);
+		}
+	}
+	
 	public void attractedTo(PointOfMass that) {
 		if (that != this) {
 			if (that.dvx == 0 && that.dvy == 0) {
@@ -730,59 +789,9 @@ class PointOfMass {
 		that.dvx -= (fx * UniverseSandbox.SPEED) / (that.m);
 		that.dvy -= (fy * UniverseSandbox.SPEED) / (that.m);
 
-		dvx += (fx * UniverseSandbox.SPEED) / (m);
-		dvy += (fy * UniverseSandbox.SPEED) / (m);
+		this.dvx += (fx * UniverseSandbox.SPEED) / (this.m);
+		this.dvy += (fy * UniverseSandbox.SPEED) / (this.m);
 
-	}
-	
-	public boolean checkTrec(PointOfMass that) {
-		// add code to do something
-		// hopefully to prevent garbage spewing everywhere
-		
-		double dx = (that.x - this.x);
-		double dy = (that.y - this.y);
-
-		double dx2 = dx * dx;
-		double dy2 = dy * dy;
-
-		double h = Math.sqrt((dx2 + dy2));
-		
-		if ((h <= this.radius) || (h <= that.radius)) {
-			return true;
-		}		
-		
-		return false;
-		
-	}
-
-	public void collidesWith(PointOfMass that) {
-		if (that != this) {
-			if (!this.eaten && !that.eaten && checkTrec(that)) {
-				if (this.m >= that.m) {
-					this.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
-					this.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
-					this.m += that.m;
-					this.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
-					that.eaten = true;
-					//UniverseSandbox.stars.remove(that);
-					this.tellTheCircleHowToBeDrawn();
-				} else {
-					that.dvx = ((that.m * that.vx) + (this.m * this.vx)) / (that.m * 2);
-					that.dvy = ((that.m * that.vy) + (this.m * this.vy)) / (that.m * 2);
-					that.m += this.m;
-					that.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
-					this.eaten = true;
-					//UniverseSandbox.stars.remove(this);
-					that.tellTheCircleHowToBeDrawn();
-				}
-			}
-		}
-	}
-	
-	public void collisionUpdate() {
-		if( eaten ) {
-			UniverseSandbox.stars.remove(this);
-		}
 	}
 
 	public void positionUpdate() {
