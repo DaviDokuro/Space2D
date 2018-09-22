@@ -15,10 +15,11 @@ import javax.imageio.ImageIO;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.*;
+
 import org.lwjgl.*;
 
 public class UniverseSandbox {
-
+	
 	public static double FPS = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0;
 	public static boolean SCREENCAP = false, RENDERLIMIT = false;
 
@@ -167,12 +168,10 @@ public class UniverseSandbox {
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_ADD)) {
 			SPEED *= 1.1;
-			System.out.println(SPEED);
 
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_SUBTRACT)) {
 			SPEED /= 1.1;
-			System.out.println(SPEED);
 		}
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
@@ -456,6 +455,7 @@ public class UniverseSandbox {
 		for (int i = 0; i < stars.size() - 1; i++) {
 			for (int j = i + 1; j < stars.size(); j++) {
 				stars.get(i).collidesWith(stars.get(j));
+				new CollisionThread("Thread" + i, stars.get(i), stars.get(j)).start();
 			}
 		}
 		
@@ -471,7 +471,7 @@ public class UniverseSandbox {
 		
 		for (int i = 0; i < stars.size() - 1; i++) {
 			for (int j = i + 1; j < stars.size(); j++) {
-				stars.get(i).attractedTo(stars.get(j));
+				new GravityThread("Thread" + i, stars.get(i), stars.get(j)).start();
 			}
 		}
 		for (PointOfMass b : stars) {
@@ -617,6 +617,8 @@ public class UniverseSandbox {
 
 		init();
 		spawnBalls();
+		
+		
 
 		while (!Display.isCloseRequested()) {
 
@@ -639,7 +641,7 @@ public class UniverseSandbox {
 			}
 			// loop display
 			Display.sync((int) FPS);
-			Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + " Scale: " + scale + " Speed: " + SPEED);
+			Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + "  |  Scale: " + String.format("%6.3e", scale) + " p/m  |  Speed: " + String.format("%6.3e", SPEED) + " s/f");
 			if (Display.wasResized()) {
 				glViewport(0, 0, Display.getWidth(), Display.getHeight());
 			}
@@ -648,6 +650,7 @@ public class UniverseSandbox {
 		close();
 	}
 }
+
 
 class PointOfMass {
 
@@ -831,4 +834,37 @@ class PointOfMass {
 		}
 
 	}
+}
+
+class CollisionThread extends Thread {
+	PointOfMass a;
+	PointOfMass b;
+	
+
+    public CollisionThread(String name, PointOfMass a, PointOfMass b) {
+        super(name);
+        this.a = a;
+    	this.b = b;
+    }
+
+    @Override
+    public void run() {
+    	a.collidesWith(b);
+    }
+}
+
+class GravityThread extends Thread {
+	PointOfMass a;
+	PointOfMass b;
+	
+    public GravityThread(String name, PointOfMass a, PointOfMass b) {
+        super(name);
+        this.a = a;
+    	this.b = b;
+    }
+
+    @Override
+    public void run() {
+    	a.attractedTo(b);
+    }
 }
