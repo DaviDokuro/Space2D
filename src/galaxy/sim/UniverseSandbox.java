@@ -19,7 +19,7 @@ import org.lwjgl.*;
 
 public class UniverseSandbox {
 
-	public static double FPS = 6000, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 30, RUNTIME = 600000;
+	public static double FPS = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 30, RUNTIME = 600000;
 	public static boolean SCREENCAP = false, RENDERLIMIT = false;
 
 	public static double speed = 1 * Math.pow(10, 3), scale = 1 * Math.pow(10, -8);
@@ -518,24 +518,21 @@ public class UniverseSandbox {
 			}
 		}
 
-		int starsPrev = stars.size();
 		for (int i = 0; i < stars.size(); i++) {
-			if (starsPrev < stars.size()) {
-				i -= 1;
+			if (stars.get(i).eaten) {
+				stars.get(i).collisionUpdate();
+				i-=1;
 			}
-			stars.get(i).collisionUpdate();
-			starsPrev = stars.size();
 
 		}
 
-		for (int i = 0; i < stars.size() - 1; i++) {
+		for (int i = 0; i < stars.size() ; i++) {
 			for (int j = i + 1; j < stars.size(); j++) {
 				stars.get(i).attractedTo(stars.get(j));
 			}
+			stars.get(i).positionUpdate();
 		}
-		for (PointOfMass b : stars) {
-			b.positionUpdate();
-		}
+		
 	}
 
 	// i got this screenshot code from stack overflow. It worked so well I had
@@ -674,7 +671,7 @@ class PointOfMass {
 	private double colorRed, colorBlue, colorGreen;
 	private double radius, minrad;
 
-	private boolean eaten = false;
+	public boolean eaten = false;
 
 	private double[][] ballPoints = new double[SEGMENTS][2];
 	private double[][] ballPointsSmall = new double[SEGMENTS][2];
