@@ -166,13 +166,11 @@ public class UniverseSandbox {
 		}
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_ADD)) {
-			SPEED *= 1.1;
-			System.out.println(SPEED);
+			SPEED *= 1.05;
 
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_SUBTRACT)) {
-			SPEED /= 1.1;
-			System.out.println(SPEED);
+			SPEED /= 1.05;
 		}
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
