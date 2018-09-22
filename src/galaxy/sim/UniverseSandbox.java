@@ -454,8 +454,7 @@ public class UniverseSandbox {
 		
 		for (int i = 0; i < stars.size() - 1; i++) {
 			for (int j = i + 1; j < stars.size(); j++) {
-				stars.get(i).collidesWith(stars.get(j));
-				new CollisionThread("Thread" + i, stars.get(i), stars.get(j)).start();
+				new CollisionThread("Thread" + (((i * stars.size()) + j) % 8), stars.get(i), stars.get(j)).start();
 			}
 		}
 		
@@ -471,7 +470,7 @@ public class UniverseSandbox {
 		
 		for (int i = 0; i < stars.size() - 1; i++) {
 			for (int j = i + 1; j < stars.size(); j++) {
-				new GravityThread("Thread" + i, stars.get(i), stars.get(j)).start();
+				new GravityThread("Thread" + (((i * stars.size()) + j) % 8), stars.get(i), stars.get(j)).start();
 			}
 		}
 		for (PointOfMass b : stars) {
@@ -861,6 +860,7 @@ class GravityThread extends Thread {
         super(name);
         this.a = a;
     	this.b = b;
+		System.out.println(name);
     }
 
     @Override
