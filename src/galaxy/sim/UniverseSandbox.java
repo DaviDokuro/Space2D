@@ -639,7 +639,7 @@ public class UniverseSandbox {
 			}
 			// loop display
 			Display.sync((int) FPS);
-			Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + " Scale: " + scale + " Speed: " + SPEED);
+			Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + "  |  Scale: " + String.format("%6.3e", scale) + " p/m  |  Speed: " + String.format("%6.3e", SPEED) + " s/f");
 			if (Display.wasResized()) {
 				glViewport(0, 0, Display.getWidth(), Display.getHeight());
 			}
