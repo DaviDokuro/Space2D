@@ -106,15 +106,34 @@ public class UniverseSandbox {
 			// loop display
 			Display.sync((int) FPS);
 			updateFPS();
-			Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + "  |  FPS: " + lastFPS + "  |  Scale: "
-					+ String.format("%6.3e", 1 / scale) + " m/px  |  Speed: " + String.format("%6.3e", speed)
-					+ " s/f  |  " + String.format("%6.3e", speed * lastFPS) + " x Realtime");
 			if (Display.wasResized()) {
 				glViewport(0, 0, Display.getWidth(), Display.getHeight());
+				updateTitle();
 			}
 		}
 
 		close();
+	}
+
+	public void efficientComp() {
+
+		for (int i = 0; i < stars.size(); i++) {
+			for (int j = i + 1; j < stars.size(); j++) {
+				stars.get(i).collidesWith(stars.get(j));
+			}
+			if (stars.get(i).eaten) {
+				stars.get(i).collisionUpdate();
+				i -= 1;
+			}
+		}
+
+		for (int i = 0; i < stars.size(); i++) {
+			for (int j = i + 1; j < stars.size(); j++) {
+				stars.get(i).attractedTo(stars.get(j));
+			}
+			stars.get(i).positionUpdate();
+		}
+
 	}
 
 	public void updateFPS() {
@@ -122,8 +141,15 @@ public class UniverseSandbox {
 			lastFPS = currentFPS;
 			currentFPS = 0;
 			frameTime += 1000;
+			updateTitle();
 		}
 		currentFPS++;
+	}
+
+	public void updateTitle() {
+		Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + "  |  FPS: " + lastFPS + "  |  Scale: "
+				+ String.format("%6.3e", 1 / scale) + " m/px  |  Speed: " + String.format("%6.3e", speed) + " s/f  |  "
+				+ String.format("%6.3e", speed * lastFPS) + " x Realtime");
 	}
 
 	public long getTime() {
@@ -193,6 +219,8 @@ public class UniverseSandbox {
 			cameraX += camPanX;
 			cameraY += camPanY;
 
+			updateTitle();
+
 		}
 	}
 
@@ -232,10 +260,11 @@ public class UniverseSandbox {
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_ADD)) {
 			speed *= 1 + 1.0 / (float) lastFPS;
-
+			updateTitle();
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_SUBTRACT)) {
 			speed /= 1 + 1.0 / (float) lastFPS;
+			updateTitle();
 		}
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
@@ -454,7 +483,7 @@ public class UniverseSandbox {
 
 		// Add asteroid belt
 		int count = 0;
-		while (count < 200) {
+		while (count < 800) {
 			double phi = 2 * Math.random() * Math.PI;
 
 			double r = (3 * Math.pow(10, 11)) + (Math.random() * 5 * Math.pow(10, 11));
@@ -477,7 +506,7 @@ public class UniverseSandbox {
 
 		// Add Keiper belt
 		count = 0;
-		while (count < 50) {
+		while (count < 200) {
 			double phi = 2 * Math.random() * Math.PI;
 
 			double r = (30 * planet[2][2]) + (Math.random() * 20 * planet[2][2]);
@@ -508,31 +537,6 @@ public class UniverseSandbox {
 		// add sun
 		stars.add(new PointOfMass(x, y, 0, 0, solarmass, 255, 255, 0, solarradius));
 
-	}
-
-	public void efficientComp() {
-
-		for (int i = 0; i < stars.size() - 1; i++) {
-			for (int j = i + 1; j < stars.size(); j++) {
-				stars.get(i).collidesWith(stars.get(j));
-			}
-		}
-
-		for (int i = 0; i < stars.size(); i++) {
-			if (stars.get(i).eaten) {
-				stars.get(i).collisionUpdate();
-				i-=1;
-			}
-
-		}
-
-		for (int i = 0; i < stars.size() ; i++) {
-			for (int j = i + 1; j < stars.size(); j++) {
-				stars.get(i).attractedTo(stars.get(j));
-			}
-			stars.get(i).positionUpdate();
-		}
-		
 	}
 
 	// i got this screenshot code from stack overflow. It worked so well I had
