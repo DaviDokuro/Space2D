@@ -21,7 +21,7 @@ import org.lwjgl.*;
 public class UniverseSandbox {
 
 
-	public static double FPS = 6000, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 30, RUNTIME = 600000;
+	public static double FPSCAP = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 30, RUNTIME = 600000;
 
 	public static boolean SCREENCAP = false, RENDERLIMIT = false;
 
@@ -107,7 +107,7 @@ public class UniverseSandbox {
 				efficientComp();
 			}
 			// loop display
-			Display.sync((int) FPS);
+			Display.sync((int) FPSCAP);
 			updateFPS();
 			Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + "  |  FPS: " + lastFPS + "  |  Scale: "
 					+ String.format("%6.3e", 1 / scale) + " m/px  |  Speed: " + String.format("%6.3e", speed)
@@ -510,7 +510,7 @@ public class UniverseSandbox {
 		}
 
 		// add sun
-		stars.add(new PointOfMass(x, y, 0, 0, solarmass, 255, 255, 0, solarradius));
+		stars.add(new PointOfMass(x, y, 0, 0, solarmass, 1, 1, 0, solarradius));
 
 	}
 
