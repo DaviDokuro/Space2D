@@ -19,7 +19,7 @@ import org.lwjgl.*;
 
 public class UniverseSandbox {
 
-	public static double FPS = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 30, RUNTIME = 600000;
+	public static double FPS = 6000, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 30, RUNTIME = 600000;
 	public static boolean SCREENCAP = false, RENDERLIMIT = false;
 
 	public static double speed = 1 * Math.pow(10, 3), scale = 1 * Math.pow(10, -8);
@@ -183,11 +183,8 @@ public class UniverseSandbox {
 
 		}
 
-		if (Mouse.isButtonDown(3)) { // add stars of random color at the cursor
-			// with random velocity vector
-			stars.add(new PointOfMass((Mouse.getX() - cameraX) / scale, (Mouse.getY() - cameraY) / scale,
-					100000000 * Math.random(), 2 * Math.random() * Math.PI, solarmass, Math.random(),
-					(Math.random() + 1) * .5, (Math.random() + 1) * .5, solarradius));
+		if (Mouse.isButtonDown(3)) {
+			
 		}
 
 		if (Mouse.isButtonDown(1)) {
@@ -231,8 +228,8 @@ public class UniverseSandbox {
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_X)) {
 			stars.add(new PointOfMass(Display.getWidth() / (scale * 2) - (cameraX / scale),
-					Display.getHeight() / (scale * 2) - (cameraY / scale), 0.1 * Math.random(),
-					2 * Math.random() * Math.PI, 1, Math.random(), Math.random(), Math.random(), solarradius));
+					Display.getHeight() / (scale * 2) - (cameraY / scale), 0,
+					0, solarmass, Math.random(), Math.random(), Math.random(), solarradius));
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_V)) {
 			double dx = Mouse.getDX();
@@ -269,7 +266,7 @@ public class UniverseSandbox {
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
 			stars.add(new PointOfMass(((Display.getWidth() * Math.random()) / scale) - (cameraX / scale),
-					((Display.getHeight() * Math.random()) / scale) - (cameraY / scale), 100000000 * Math.random(),
+					((Display.getHeight() * Math.random()) / scale) - (cameraY / scale), 0,
 					2 * Math.random() * Math.PI, solarmass, Math.random(), Math.random(), Math.random(), solarradius));
 
 		}
