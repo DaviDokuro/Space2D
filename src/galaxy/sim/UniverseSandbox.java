@@ -664,7 +664,7 @@ public class UniverseSandbox {
 
 class PointOfMass {
 
-	double drawAngle = 15;
+	double drawAngle = 1;
 
 	private int SEGMENTS = (int) (360 / drawAngle);
 
