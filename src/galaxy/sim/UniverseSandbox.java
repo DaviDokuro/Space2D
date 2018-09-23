@@ -19,7 +19,7 @@ import org.lwjgl.*;
 
 public class UniverseSandbox {
 
-	public static double FPS = 6000, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 30, RUNTIME = 600000;
+	public static double FPS = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 30, RUNTIME = 600000;
 	public static boolean SCREENCAP = false, RENDERLIMIT = false;
 
 	public static double speed = 1 * Math.pow(10, 3), scale = 1 * Math.pow(10, -8);
