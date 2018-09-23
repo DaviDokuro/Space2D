@@ -123,7 +123,7 @@ public class UniverseSandbox {
 
 		for (int i = 0; i < stars.size(); i++) {
 			for (int j = i + 1; j < stars.size(); j++) {
-				stars.get(i).collidesWith(stars.get(j));
+				new CollisionThread("Thread" + i+j, stars.get(i), stars.get(j)).start();
 			}
 			if (stars.get(i).eaten) {
 				stars.get(i).collisionUpdate();
@@ -133,7 +133,7 @@ public class UniverseSandbox {
 
 		for (int i = 0; i < stars.size(); i++) {
 			for (int j = i + 1; j < stars.size(); j++) {
-				stars.get(i).attractedTo(stars.get(j));
+				new GravityThread("Thread" + i+j, stars.get(i), stars.get(j)).start();
 			}
 			stars.get(i).positionUpdate();
 		}
@@ -541,34 +541,7 @@ public class UniverseSandbox {
 
 	}
 
-<<<<<<< HEAD
-	public void efficientComp() {
 
-		for (int i = 0; i < stars.size() - 1; i++) {
-			for (int j = i + 1; j < stars.size(); j++) {
-				new CollisionThread("Thread" + i+j, stars.get(i), stars.get(j)).start();
-			}
-		}
-
-		for (int i = 0; i < stars.size(); i++) {
-			if (stars.get(i).eaten) {
-				stars.get(i).collisionUpdate();
-				i-=1;
-			}
-
-		}
-
-		for (int i = 0; i < stars.size() ; i++) {
-			for (int j = i + 1; j < stars.size(); j++) {
-				new GravityThread("Thread" + i+j, stars.get(i), stars.get(j)).start();
-			}
-			stars.get(i).positionUpdate();
-		}
-		
-	}
-
-=======
->>>>>>> master
 	// i got this screenshot code from stack overflow. It worked so well I had
 	// no need to make my own.
 	private void screenShot() {
