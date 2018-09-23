@@ -21,7 +21,7 @@ public class UniverseSandbox {
 
 
 
-	public static double FPSCAP = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 30, RUNTIME = 600000;
+	public static double FPSCAP = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 4, RUNTIME = 40000;
 
 
 	public static boolean SCREENCAP = false, RENDERLIMIT = false;
@@ -55,7 +55,7 @@ public class UniverseSandbox {
 
 	public boolean paused = false;
 
-	private static String screenshotFolder = "D:/Images/Phys Sim/Solar System/5th/";
+	private static String screenshotFolder = "D:/Images/Phys Sim/Accurate Spacing/12th/";
 
 	public static void main(String[] args) {
 		if (SCREENCAP) {
@@ -106,7 +106,7 @@ public class UniverseSandbox {
 				if (FRAME > RUNTIME && RENDERLIMIT) {
 					close();
 				}
-				//efficientComp();
+				//regularComp();
 				multithreadedComp();
 			}
 			// loop display
@@ -121,7 +121,7 @@ public class UniverseSandbox {
 		close();
 	}
 	
-	public void efficientComp() {
+	public void regularComp() {
 
 		for (int i = 0; i < stars.size(); i++) {
 			for (int j = i + 1; j < stars.size(); j++) {
@@ -377,13 +377,13 @@ public class UniverseSandbox {
 	}
 
 	public void spawnBalls() {
-		// SPEED = 1 * Math.pow(10, 5);
+		// speed = 1 * Math.pow(10, 5);
 		// scale = 2 * Math.pow(10, -10);
 		// spawnSolarSystem(0, 0);
 
-		// SPEED = 1 * Math.pow(10, 14);
-		// scale = 8 * Math.pow(10, -19);
-		// spawnGalaxy(0, 0);
+		//speed = 1 * Math.pow(10, 13);
+		//scale = 8 * Math.pow(10, -19);
+		//spawnGalaxy(0, 0);
 
 		// fun_render_1();
 	}
@@ -716,7 +716,7 @@ public class UniverseSandbox {
 
 class PointOfMass {
 
-	double drawAngle = 1;
+	double drawAngle = 30;
 
 	private int SEGMENTS = (int) (360 / drawAngle);
 
@@ -938,4 +938,3 @@ class GravityThread extends PhysicsThread {
 		}
     }
 }
-
