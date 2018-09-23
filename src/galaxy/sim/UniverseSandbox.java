@@ -50,6 +50,8 @@ public class UniverseSandbox {
 	double rulerX = 0, rulerY = 0; // in meters
 
 	static List<PointOfMass> stars = new ArrayList<PointOfMass>();
+	
+	static PhysicsThread[] threads = new PhysicsThread[8];
 
 	public boolean paused = false;
 
@@ -105,7 +107,7 @@ public class UniverseSandbox {
 					close();
 				}
 
-				efficientComp();
+				multithreadedComp();
 			}
 			// loop display
 			Display.sync((int) FPSCAP);
@@ -119,24 +121,46 @@ public class UniverseSandbox {
 		close();
 	}
 
-	public void efficientComp() {
-
-		for (int i = 0; i < stars.size(); i++) {
-			for (int j = i + 1; j < stars.size(); j++) {
-				new CollisionThread("Thread" + i+j, stars.get(i), stars.get(j)).start();
+	public void multithreadedComp() {
+		
+		for(int i=0; i<8; i++) {
+			threads[i] = new CollisionThread("Thread" + i, i);
+			threads[i].start();
+		}
+		
+		for(int i=0; i<8; i++) {
+			try {
+				threads[i].join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
-			if (stars.get(i).eaten) {
-				stars.get(i).collisionUpdate();
+		}
+		
+		for (int i = 0; i < stars.size(); i++) {
+			if (UniverseSandbox.stars.get(i).eaten) {
+				UniverseSandbox.stars.get(i).collisionUpdate();
 				i -= 1;
 			}
 		}
-
-		for (int i = 0; i < stars.size(); i++) {
-			for (int j = i + 1; j < stars.size(); j++) {
-				new GravityThread("Thread" + i+j, stars.get(i), stars.get(j)).start();
-			}
-			stars.get(i).positionUpdate();
+		
+		for(int i=0; i<8; i++) {
+			threads[i] = new GravityThread("Thread" + i, i);
+			threads[i].start();
 		}
+		
+		for(int i=0; i<8; i++) {
+			try {
+				threads[i].join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}		
+
+		for (int i = 0; i < stars.size(); i++) {		
+			UniverseSandbox.stars.get(i).positionUpdate();
+		}
+
+		
 
 	}
 
@@ -671,7 +695,7 @@ public class UniverseSandbox {
 
 class PointOfMass {
 
-	double drawAngle = 15;
+	double drawAngle = 1;
 
 	private int SEGMENTS = (int) (360 / drawAngle);
 
@@ -851,35 +875,46 @@ class PointOfMass {
 	}
 }
 
-class CollisionThread extends Thread {
-	PointOfMass a;
-	PointOfMass b;
+class PhysicsThread extends Thread {
+	int thread;
 	
 
-    public CollisionThread(String name, PointOfMass a, PointOfMass b) {
+    public PhysicsThread(String name, int thread) {
         super(name);
-        this.a = a;
-    	this.b = b;
+        this.thread = thread;
+    }
+}
+
+
+class CollisionThread extends PhysicsThread {
+
+    public CollisionThread(String name, int thread) {
+		super(name, thread);
+	}
+
+	@Override
+    public void run() {
+    	for (int i = (thread * UniverseSandbox.stars.size()) / 8; i < ((thread + 1) * UniverseSandbox.stars.size()) / 8; i++) {
+			for (int j = i + 1; j < UniverseSandbox.stars.size(); j++) {
+				UniverseSandbox.stars.get(i).collidesWith(UniverseSandbox.stars.get(j));
+			}
+    	}
+    }
+}
+
+class GravityThread extends PhysicsThread {
+
+    public GravityThread(String name, int thread) {
+        super(name, thread);
     }
 
     @Override
     public void run() {
-    	a.collidesWith(b);
+    	for (int i = (thread * UniverseSandbox.stars.size()) / 8; i < ((thread + 1) * UniverseSandbox.stars.size()) / 8; i++) {
+			for (int j = i + 1; j < UniverseSandbox.stars.size(); j++) {
+				UniverseSandbox.stars.get(i).attractedTo(UniverseSandbox.stars.get(j));
+			}
+		}
     }
 }
 
-class GravityThread extends Thread {
-	PointOfMass a;
-	PointOfMass b;
-	
-    public GravityThread(String name, PointOfMass a, PointOfMass b) {
-        super(name);
-        this.a = a;
-    	this.b = b;
-    }
-
-    @Override
-    public void run() {
-    	a.attractedTo(b);
-    }
-}
