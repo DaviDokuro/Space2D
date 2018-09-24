@@ -416,7 +416,7 @@ public class UniverseSandbox {
 
 	private void spawnGalaxy(double x, double y) {
 
-		double number_of_stars = 1000;
+		double number_of_stars = 10000;
 
 		double red = 0;
 		double green = 0;
@@ -899,6 +899,14 @@ class PointOfMass {
 
 class PhysicsThread extends Thread {
 	int thread;
+	long starttime; 
+	
+	public PhysicsThread(String name, int thread) {
+        super(name);
+        this.thread = thread;
+        starttime = System.nanoTime();
+        System.out.println(thread + " " + startIndex() + " " + endIndex());
+    }
 	
 	protected int startIndex() {
 		return makeIndex(thread);
@@ -912,19 +920,15 @@ class PhysicsThread extends Thread {
 	
 	private int makeIndex(int thread) {
 		
-		int top = (thread * UniverseSandbox.stars.size()) / UniverseSandbox.THREADCOUNT;
-		int bottom = (UniverseSandbox.THREADCOUNT - thread);
+		int top = (thread * UniverseSandbox.stars.size()) / (UniverseSandbox.THREADCOUNT);
+		int bottom = (UniverseSandbox.THREADCOUNT - thread) + 1;
 		if (bottom == 0) {
 			return top;
 		}
 		return  top / bottom;
 	}
 
-    public PhysicsThread(String name, int thread) {
-        super(name);
-        this.thread = thread;
-        System.out.println(thread + " " + startIndex() + " " + endIndex());
-    }
+   
 }
 
 
@@ -936,11 +940,14 @@ class CollisionThread extends PhysicsThread {
 
 	@Override
     public void run() {
-    	for (int i = startIndex(); i < endIndex(); i++) {
+		int startpoint = startIndex();
+		int endpoint = endIndex();
+    	for (int i = startpoint; i < endpoint; i++) {
 			for (int j = i + 1; j < UniverseSandbox.stars.size(); j++) {
 				UniverseSandbox.stars.get(i).collidesWith(UniverseSandbox.stars.get(j));
 			}
     	}
+		System.out.println(super.thread + " " + (System.nanoTime() - super.starttime));
     }
 }
 
@@ -952,10 +959,13 @@ class GravityThread extends PhysicsThread {
 
     @Override
     public void run() {
-    	for (int i = startIndex(); i < endIndex(); i++) {
+    	int startpoint = startIndex();
+		int endpoint = endIndex();
+    	for (int i = startpoint; i < endpoint; i++) {
 			for (int j = i + 1; j < UniverseSandbox.stars.size(); j++) {
 				UniverseSandbox.stars.get(i).attractedTo(UniverseSandbox.stars.get(j));
 			}
 		}
+		System.out.println(super.thread + " " + (System.nanoTime() - super.starttime));
     }
 }
