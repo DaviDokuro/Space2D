@@ -197,7 +197,7 @@ public class UniverseSandbox {
 	}
 
 	public void updateTitle() {
-		Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + "  |  FPS: " + lastFPS + "  |  Scale: "
+		Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + "  |  Dots: " + stars.size() + "  |  FPS: " + lastFPS + "  |  Scale: "
 				+ String.format("%6.3e", 1 / scale) + " m/px  |  Speed: " + String.format("%6.3e", speed) + " s/f  |  "
 				+ String.format("%6.3e", speed * lastFPS) + " x Realtime");
 	}
@@ -905,7 +905,7 @@ class PhysicsThread extends Thread {
         super(name);
         this.thread = thread;
         starttime = System.nanoTime();
-        System.out.println(thread + " " + startIndex() + " " + endIndex());
+    //    System.out.println(thread + " " + startIndex() + " " + endIndex());
     }
 	
 	protected int startIndex() {
@@ -921,11 +921,11 @@ class PhysicsThread extends Thread {
 	private int makeIndex(int thread) {
 		
 		int top = (thread * UniverseSandbox.stars.size()) / (UniverseSandbox.THREADCOUNT);
-		int bottom = (UniverseSandbox.THREADCOUNT - thread) + 1;
-		if (bottom == 0) {
-			return top;
-		}
-		return  top / bottom;
+		
+		double logging = Math.log(thread + 1) / Math.log(UniverseSandbox.THREADCOUNT + 1);
+		
+		return (int) (top * logging);
+
 	}
 
    
@@ -947,7 +947,7 @@ class CollisionThread extends PhysicsThread {
 				UniverseSandbox.stars.get(i).collidesWith(UniverseSandbox.stars.get(j));
 			}
     	}
-		System.out.println(super.thread + " " + (System.nanoTime() - super.starttime));
+		//System.out.println(super.thread + " " + (System.nanoTime() - super.starttime));
     }
 }
 
@@ -966,6 +966,6 @@ class GravityThread extends PhysicsThread {
 				UniverseSandbox.stars.get(i).attractedTo(UniverseSandbox.stars.get(j));
 			}
 		}
-		System.out.println(super.thread + " " + (System.nanoTime() - super.starttime));
+		//System.out.println(super.thread + " " + (System.nanoTime() - super.starttime));
     }
 }
