@@ -20,8 +20,9 @@ import org.lwjgl.*;
 public class UniverseSandbox {
 
 
-
+	
 	public static double FPSCAP = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 4, RUNTIME = 40000;
+	public static int THREADCOUNT = 8;
 
 
 	public static boolean SCREENCAP = false, RENDERLIMIT = false;
@@ -51,7 +52,7 @@ public class UniverseSandbox {
 
 	static List<PointOfMass> stars = new ArrayList<PointOfMass>();
 	
-	static PhysicsThread[] threads = new PhysicsThread[8];
+	static PhysicsThread[] threads = new PhysicsThread[THREADCOUNT];
 
 	public boolean paused = false;
 
@@ -144,12 +145,12 @@ public class UniverseSandbox {
 
 	public void multithreadedComp() {
 		
-		for(int i=0; i<8; i++) {
+		for(int i=0; i<THREADCOUNT; i++) {
 			threads[i] = new CollisionThread("Thread" + i, i);
 			threads[i].start();
 		}
 		
-		for(int i=0; i<8; i++) {
+		for(int i=0; i<THREADCOUNT; i++) {
 			try {
 				threads[i].join();
 			} catch (InterruptedException e) {
@@ -164,12 +165,12 @@ public class UniverseSandbox {
 			}
 		}
 		
-		for(int i=0; i<8; i++) {
+		for(int i=0; i<THREADCOUNT; i++) {
 			threads[i] = new GravityThread("Thread" + i, i);
 			threads[i].start();
 		}
 		
-		for(int i=0; i<8; i++) {
+		for(int i=0; i<THREADCOUNT; i++) {
 			try {
 				threads[i].join();
 			} catch (InterruptedException e) {
@@ -899,10 +900,30 @@ class PointOfMass {
 class PhysicsThread extends Thread {
 	int thread;
 	
+	protected int startIndex() {
+		return makeIndex(thread);
+		
+	}
+	
+	protected int endIndex() {
+		return makeIndex(thread + 1);
+		
+	}
+	
+	private int makeIndex(int thread) {
+		
+		int top = (thread * UniverseSandbox.stars.size()) / UniverseSandbox.THREADCOUNT;
+		int bottom = (UniverseSandbox.THREADCOUNT - thread);
+		if (bottom == 0) {
+			return top;
+		}
+		return  top / bottom;
+	}
 
     public PhysicsThread(String name, int thread) {
         super(name);
         this.thread = thread;
+        System.out.println(thread + " " + startIndex() + " " + endIndex());
     }
 }
 
@@ -915,7 +936,7 @@ class CollisionThread extends PhysicsThread {
 
 	@Override
     public void run() {
-    	for (int i = (thread * UniverseSandbox.stars.size()) / 8; i < ((thread + 1) * UniverseSandbox.stars.size()) / 8; i++) {
+    	for (int i = startIndex(); i < endIndex(); i++) {
 			for (int j = i + 1; j < UniverseSandbox.stars.size(); j++) {
 				UniverseSandbox.stars.get(i).collidesWith(UniverseSandbox.stars.get(j));
 			}
@@ -931,7 +952,7 @@ class GravityThread extends PhysicsThread {
 
     @Override
     public void run() {
-    	for (int i = (thread * UniverseSandbox.stars.size()) / 8; i < ((thread + 1) * UniverseSandbox.stars.size()) / 8; i++) {
+    	for (int i = startIndex(); i < endIndex(); i++) {
 			for (int j = i + 1; j < UniverseSandbox.stars.size(); j++) {
 				UniverseSandbox.stars.get(i).attractedTo(UniverseSandbox.stars.get(j));
 			}
