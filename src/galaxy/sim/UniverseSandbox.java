@@ -19,15 +19,14 @@ import org.lwjgl.*;
 
 public class UniverseSandbox {
 
-
 	// USER CONFIGURABLE
-	public static int FPSCAP = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FSWIDTH = 3840, FSHEIGHT  = 2160, FRAMESKIP = 4, RUNTIME = 40000, THREADCOUNT = 8;
+	public static int FPSCAP = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FSWIDTH = 3840, FSHEIGHT = 2160,
+			FRAMESKIP = 4, RUNTIME = 40000, THREADCOUNT = 8;
 
 	public static boolean SCREENCAP = false, RENDERLIMIT = false;
 
 	private static String screenshotFolder = "D:/Phys Sim/run1/";
 	// End config thing place
-	
 
 	public static double speed = 1 * Math.pow(10, 3), scale = 1 * Math.pow(10, -8);
 
@@ -53,11 +52,10 @@ public class UniverseSandbox {
 	double rulerX = 0, rulerY = 0; // in meters
 
 	static List<PointOfMass> stars = new ArrayList<PointOfMass>();
-	
+
 	static PhysicsThread[] threads = new PhysicsThread[THREADCOUNT];
 
 	public boolean paused = false;
-
 
 	public static void main(String[] args) {
 		if (SCREENCAP) {
@@ -108,7 +106,7 @@ public class UniverseSandbox {
 				if (FRAME > RUNTIME && RENDERLIMIT) {
 					close();
 				}
-				//regularComp();
+				// regularComp();
 				multithreadedComp();
 			}
 			// loop display
@@ -122,7 +120,7 @@ public class UniverseSandbox {
 
 		close();
 	}
-	
+
 	public void regularComp() {
 
 		for (int i = 0; i < stars.size(); i++) {
@@ -145,45 +143,39 @@ public class UniverseSandbox {
 	}
 
 	public void multithreadedComp() {
-		
-		for(int i=0; i<THREADCOUNT; i++) {
+
+		for (int i = 0; i < THREADCOUNT; i++) {
 			threads[i] = new CollisionThread("Thread" + i, i);
 			threads[i].start();
 		}
-		
-		for(int i=0; i<THREADCOUNT; i++) {
+		for (int i = 0; i < THREADCOUNT; i++) {
 			try {
 				threads[i].join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		
 		for (int i = 0; i < stars.size(); i++) {
 			if (UniverseSandbox.stars.get(i).eaten) {
 				UniverseSandbox.stars.get(i).collisionUpdate();
 				i -= 1;
 			}
 		}
-		
-		for(int i=0; i<THREADCOUNT; i++) {
+
+		for (int i = 0; i < THREADCOUNT; i++) {
 			threads[i] = new GravityThread("Thread" + i, i);
 			threads[i].start();
 		}
-		
-		for(int i=0; i<THREADCOUNT; i++) {
+		for (int i = 0; i < THREADCOUNT; i++) {
 			try {
 				threads[i].join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		}		
-
-		for (int i = 0; i < stars.size(); i++) {		
+		}
+		for (int i = 0; i < stars.size(); i++) {
 			UniverseSandbox.stars.get(i).positionUpdate();
 		}
-
-		
 
 	}
 
@@ -198,9 +190,10 @@ public class UniverseSandbox {
 	}
 
 	public void updateTitle() {
-		Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + "  |  Dots: " + stars.size() + "  |  FPS: " + lastFPS + "  |  Scale: "
-				+ String.format("%6.3e", 1 / scale) + " m/px  |  Speed: " + String.format("%6.3e", speed) + " s/f  |  "
-				+ String.format("%6.3e", speed * lastFPS) + " x Realtime");
+		Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + "  |  Dots: " + stars.size() + "  |  FPS: "
+				+ lastFPS + "  |  Scale: " + String.format("%6.3e", 1 / scale) + " m/px  |  Speed: "
+				+ String.format("%6.3e", speed) + " s/f  |  " + String.format("%6.3e", speed * lastFPS)
+				+ " x Realtime");
 	}
 
 	public long getTime() {
@@ -219,9 +212,9 @@ public class UniverseSandbox {
 	// mouse inputs
 	public void mouseaction() {
 		if (Mouse.isButtonDown(0)) { // add stars of random color at the cursor
-										// with random velocity vector
-			stars.add(new PointOfMass((Mouse.getX() - cameraX) / scale, (Mouse.getY() - cameraY) / scale,
-					0 * Math.random(), 2 * Math.random() * Math.PI, solarmass, Math.random(), (Math.random() + 1) * .5,
+										// with 0 velocity
+			stars.add(new PointOfMass((Mouse.getX() - cameraX) / scale, (Mouse.getY() - cameraY) / scale, 0,
+					2 * Math.random() * Math.PI, solarmass, Math.random(), (Math.random() + 1) * .5,
 					(Math.random() + 1) * .5, solarradius));
 		}
 
@@ -235,7 +228,7 @@ public class UniverseSandbox {
 		}
 
 		if (Mouse.isButtonDown(3)) {
-			
+
 		}
 
 		if (Mouse.isButtonDown(1)) {
@@ -279,8 +272,8 @@ public class UniverseSandbox {
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_X)) {
 			stars.add(new PointOfMass(Display.getWidth() / (scale * 2) - (cameraX / scale),
-					Display.getHeight() / (scale * 2) - (cameraY / scale), 0,
-					0, solarmass, Math.random(), Math.random(), Math.random(), solarradius));
+					Display.getHeight() / (scale * 2) - (cameraY / scale), 0, 0, solarmass, Math.random(),
+					Math.random(), Math.random(), solarradius));
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_V)) {
 			double dx = Mouse.getDX();
@@ -318,16 +311,15 @@ public class UniverseSandbox {
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
 			stars.add(new PointOfMass(((Display.getWidth() * Math.random()) / scale) - (cameraX / scale),
-					((Display.getHeight() * Math.random()) / scale) - (cameraY / scale), 0,
-					2 * Math.random() * Math.PI, solarmass, Math.random(), Math.random(), Math.random(), solarradius));
+					((Display.getHeight() * Math.random()) / scale) - (cameraY / scale), 0, 2 * Math.random() * Math.PI,
+					solarmass, Math.random(), Math.random(), Math.random(), solarradius));
 
 		}
 		while (Keyboard.next()) {
 			if (Keyboard.getEventKey() == Keyboard.KEY_C && Keyboard.getEventKeyState()) {
 				stars.add(new PointOfMass((Display.getWidth() / (2 * scale)) - (cameraX / scale),
-						(Display.getHeight() / (2 * scale)) - (cameraY / scale), 5 * Math.random(),
-						2 * Math.random() * Math.PI, solarmass, Math.random(), Math.random(), Math.random(),
-						solarradius));
+						(Display.getHeight() / (2 * scale)) - (cameraY / scale), 0, 2 * Math.random() * Math.PI,
+						solarmass, Math.random(), Math.random(), Math.random(), solarradius));
 			}
 			if (Keyboard.getEventKey() == Keyboard.KEY_S && Keyboard.getEventKeyState()) {
 				System.out.println(stars.size());
@@ -383,9 +375,9 @@ public class UniverseSandbox {
 		// scale = 2 * Math.pow(10, -10);
 		// spawnSolarSystem(0, 0);
 
-		//speed = 1 * Math.pow(10, 13);
-		//scale = 8 * Math.pow(10, -19);
-		//spawnGalaxy(0, 0);
+		// speed = 1 * Math.pow(10, 13);
+		// scale = 8 * Math.pow(10, -19);
+		// spawnGalaxy(0, 0);
 
 		// fun_render_1();
 	}
@@ -417,7 +409,7 @@ public class UniverseSandbox {
 
 	private void spawnGalaxy(double x, double y) {
 
-		double number_of_stars = 10000;
+		double number_of_stars = 1000;
 
 		double red = 0;
 		double green = 0;
@@ -588,7 +580,6 @@ public class UniverseSandbox {
 
 	}
 
-
 	// i got this screenshot code from stack overflow. It worked so well I had
 	// no need to make my own.
 	private void screenShot() {
@@ -715,7 +706,6 @@ public class UniverseSandbox {
 
 }
 
-
 class PointOfMass {
 
 	double drawAngle = 30;
@@ -785,7 +775,7 @@ class PointOfMass {
 
 		double h = Math.sqrt((dx2 + dy2));
 
-		if ((h <= this.radius) || (h <= that.radius)) {
+		if ((h <= this.radius + that.radius)) {
 			return true;
 		}
 
@@ -900,73 +890,73 @@ class PointOfMass {
 
 class PhysicsThread extends Thread {
 	int thread;
-	long starttime; 
-	
+	long starttime;
+
 	public PhysicsThread(String name, int thread) {
-        super(name);
-        this.thread = thread;
-        starttime = System.nanoTime();
-    //    System.out.println(thread + " " + startIndex() + " " + endIndex());
-    }
-	
+		super(name);
+		this.thread = thread;
+		starttime = System.nanoTime();
+		// System.out.println(thread + " " + startIndex() + " " + endIndex());
+	}
+
 	protected int startIndex() {
 		return makeIndex(thread);
-		
+
 	}
-	
+
 	protected int endIndex() {
 		return makeIndex(thread + 1);
-		
+
 	}
-	
+
 	private int makeIndex(int thread) {
-		
+
 		int top = (thread * UniverseSandbox.stars.size()) / (UniverseSandbox.THREADCOUNT);
-		
+
 		double logging = Math.log(thread + 1) / Math.log(UniverseSandbox.THREADCOUNT + 1);
-		
+
 		return (int) (top * logging);
 
 	}
 
-   
 }
-
 
 class CollisionThread extends PhysicsThread {
 
-    public CollisionThread(String name, int thread) {
+	public CollisionThread(String name, int thread) {
 		super(name, thread);
 	}
 
 	@Override
-    public void run() {
+	public void run() {
 		int startpoint = startIndex();
 		int endpoint = endIndex();
-    	for (int i = startpoint; i < endpoint; i++) {
+		for (int i = startpoint; i < endpoint; i++) {
 			for (int j = i + 1; j < UniverseSandbox.stars.size(); j++) {
 				UniverseSandbox.stars.get(i).collidesWith(UniverseSandbox.stars.get(j));
 			}
-    	}
-		//System.out.println(super.thread + " " + (System.nanoTime() - super.starttime));
-    }
+		}
+		// System.out.println(super.thread + " " + (System.nanoTime() -
+		// super.starttime));
+	}
 }
 
 class GravityThread extends PhysicsThread {
 
-    public GravityThread(String name, int thread) {
-        super(name, thread);
-    }
+	public GravityThread(String name, int thread) {
+		super(name, thread);
+	}
 
-    @Override
-    public void run() {
-    	int startpoint = startIndex();
+	@Override
+	public void run() {
+		int startpoint = startIndex();
 		int endpoint = endIndex();
-    	for (int i = startpoint; i < endpoint; i++) {
+		for (int i = startpoint; i < endpoint; i++) {
 			for (int j = i + 1; j < UniverseSandbox.stars.size(); j++) {
 				UniverseSandbox.stars.get(i).attractedTo(UniverseSandbox.stars.get(j));
 			}
 		}
-		//System.out.println(super.thread + " " + (System.nanoTime() - super.starttime));
-    }
+		// System.out.println(super.thread + " " + (System.nanoTime() -
+		// super.starttime));
+	}
 }
