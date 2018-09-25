@@ -20,12 +20,14 @@ import org.lwjgl.*;
 public class UniverseSandbox {
 
 
-	
-	public static double FPSCAP = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAME = 0, FRAMESKIP = 4, RUNTIME = 40000;
-	public static int THREADCOUNT = 8;
-
+	// USER CONFIGURABLE
+	public static int FPSCAP = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FSWIDTH = 3840, FSHEIGHT  = 2160, FRAMESKIP = 4, RUNTIME = 40000, THREADCOUNT = 8;
 
 	public static boolean SCREENCAP = false, RENDERLIMIT = false;
+
+	private static String screenshotFolder = "D:/Phys Sim/run1/";
+	// End config thing place
+	
 
 	public static double speed = 1 * Math.pow(10, 3), scale = 1 * Math.pow(10, -8);
 
@@ -36,7 +38,7 @@ public class UniverseSandbox {
 
 	public static int currentFPS, lastFPS;
 	public static long frameTime;
-
+	public static int FRAME = 0;
 	// Universal Constants and Measures
 	public static double G = 6.673 * Math.pow(10, -11); // Newton meters Squared
 														// per kg Squared
@@ -56,7 +58,6 @@ public class UniverseSandbox {
 
 	public boolean paused = false;
 
-	private static String screenshotFolder = "D:/Images/Phys Sim/Accurate Spacing/12th/";
 
 	public static void main(String[] args) {
 		if (SCREENCAP) {
@@ -357,7 +358,7 @@ public class UniverseSandbox {
 					glViewport(0, 0, Display.getWidth(), Display.getHeight());
 
 				} else {
-					setDisplayMode(3840, 2160, true);
+					setDisplayMode(FSWIDTH, FSHEIGHT, true);
 					glViewport(0, 0, Display.getWidth(), Display.getHeight());
 
 				}
