@@ -8,6 +8,8 @@ while making the results as accurate and efficient as I possibly can.
 
 Lately, this project has become an exercize in optimization. Feel free to clone the repo to come up with your own sorts of optimizations.
 
+Because this project is so old, it was made with LWJGL 2 libraries. I am considering porting it to LWJGL 3, but am not currently working on that port. As far as I'm concerned, LWJGL 2 is doing fine for this application; The rendering itself is the least intensive part.
+
 ## Using 
 If you want to play with this project, just clone the repo to your eclipse workspace. Thats pretty much most of the work done. 
 
