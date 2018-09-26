@@ -51,7 +51,7 @@ Don't limit yourself to just these though, change anything in the code if you th
 ## Controls
 ### Mouse
 * Left Click - Spam-spawn stars at the cursor, 1 new star every frame
-* Richt Click - Drag to measure space, results output to console. It's pretty bad, but works.
+* Right Click - Drag to measure space, results output to console. It's pretty bad, but works.
 * Middle Click - Drag to pan camera. If no middle click on your mouse, press V for same effect.
 * Scroll - Zoom in and out at cursor
 * Mouse Button 5 - Spawn 1 star at cursor (I might need to update these controls)
