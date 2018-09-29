@@ -143,7 +143,8 @@ public class UniverseSandbox {
 	}
 
 	public void multithreadedComp() {
-
+	
+		/*
 		for (int i = 0; i < THREADCOUNT; i++) {
 			threads[i] = new CollisionThread("Thread" + i, i);
 			threads[i].start();
@@ -161,7 +162,8 @@ public class UniverseSandbox {
 				i -= 1;
 			}
 		}
-
+		*/
+		
 		for (int i = 0; i < THREADCOUNT; i++) {
 			threads[i] = new GravityThread("Thread" + i, i);
 			threads[i].start();
@@ -409,7 +411,7 @@ public class UniverseSandbox {
 
 	private void spawnGalaxy(double x, double y) {
 
-		double number_of_stars = 1000;
+		double number_of_stars = 10000;
 
 		double red = 0;
 		double green = 0;
@@ -849,6 +851,42 @@ class PointOfMass {
 		this.dvy += (fy * UniverseSandbox.speed) / (this.m);
 
 	}
+	
+	public void mtAttraction(PointOfMass that) {
+		if (that != this) {
+			if (that.dvx == 0 && that.dvy == 0) {
+				that.dvx = that.vx;
+				that.dvy = that.vy;
+			}
+
+			if (dvx == 0 && dvy == 0) {
+				dvx = vx;
+				dvy = vy;
+			}
+
+			double dx = (that.x - this.x);
+			double dy = (that.y - this.y);
+
+			double dx2 = dx * dx;
+			double dy2 = dy * dy;
+
+			ineffGrav(that, dx, dy, dx2 + dy2);
+
+		}
+	}
+	
+	public void ineffGrav(PointOfMass that, double dx, double dy, double r2) {
+		double G = UniverseSandbox.G;
+
+		double h = Math.sqrt(r2);
+
+		double fx = (G * m * that.m * (dx / h)) / (r2);
+		double fy = (G * m * that.m * (dy / h)) / (r2);
+
+		this.dvx += (fx * UniverseSandbox.speed) / (this.m);
+		this.dvy += (fy * UniverseSandbox.speed) / (this.m);
+
+	}
 
 	public void positionUpdate() {
 		vx = dvx;
@@ -913,9 +951,11 @@ class PhysicsThread extends Thread {
 
 		int top = (thread * UniverseSandbox.stars.size()) / (UniverseSandbox.THREADCOUNT);
 
-		double logging = Math.log(thread + 1) / Math.log(UniverseSandbox.THREADCOUNT + 1);
+		//double logging = Math.log(thread + 1) / Math.log(UniverseSandbox.THREADCOUNT + 1);
 
-		return (int) (top * logging);
+		//return (int) (top * logging);
+		
+		return top;
 
 	}
 
@@ -952,8 +992,8 @@ class GravityThread extends PhysicsThread {
 		int startpoint = startIndex();
 		int endpoint = endIndex();
 		for (int i = startpoint; i < endpoint; i++) {
-			for (int j = i + 1; j < UniverseSandbox.stars.size(); j++) {
-				UniverseSandbox.stars.get(i).attractedTo(UniverseSandbox.stars.get(j));
+			for (int j = 0; j < UniverseSandbox.stars.size(); j++) {
+				UniverseSandbox.stars.get(i).mtAttraction(UniverseSandbox.stars.get(j));
 			}
 		}
 		// System.out.println(super.thread + " " + (System.nanoTime() -
