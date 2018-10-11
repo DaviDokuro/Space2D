@@ -32,6 +32,7 @@ There are a bunch of configurable variables at the top of the code, listed below
     int THREADCOUNT = 8
     boolean SCREENCAP = false
     boolean RENDERLIMIT = false
+    boolean COLLISION = true
     String screenshotFolder = "D:/Phys Sim/run1/"
 
 * FPSCAP - The maximum framerate allowed to be displayed, 60 for a 60hz monitor. Fun to set insanely high frametargets.
@@ -39,11 +40,12 @@ There are a bunch of configurable variables at the top of the code, listed below
 * FRAMEHEIGHT - The vertical windowed frame resolution, 1080 for a 1080p window.
 * FSWIDTH - The horizontal fullscreen frame resolution, 3840 for UHD.
 * FSHEIGHT - The vertical fullscreen frame resolution, 2160 for UHD.
-* FRAMESKIP - The number of frames to skip when recording. When simulating at low speeds, changing this value can save a lot of drive space.
+* FRAMESKIP - The number of frames to skip when recording. When simulating at low speeds, changing this value can save a lot of drive space. It can be thought of as a timelapse of your simulation. Setting this to 1 will take a screenshot every frame.
 * RUNTIME - The number of steps to calculate before closing the application. Only matters when RENDERLIMIT is set to true. RUNTIME/FRAMESKIP will tell you how many screenshots you will have when the simulation is done.
 * THREADCOUNT - The number of processor threads you have available. I have a quad-core with 8 threads.
 * SCREENCAP - Boolean value to determine if screenshots will be taken or not.
 * RENDERLIMIT - Boolean value to determine if application will be closed after RUNTIME is reached.
+* COLLISION - Boolean value to determine if the algorythm checks for collisions. Currently, the code only checks for hitboxes and doesn't check for path intersection. It's pretty useless during simulation, but is fun to play with. Recomended to disable collisions when running larger simulations at higher speeds.
 * screenshotFolder - Path to where you want screenshots saved.
 
 Don't limit yourself to just these though, change anything in the code if you think it will make it better. The world is your oyster.
