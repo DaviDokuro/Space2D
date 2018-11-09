@@ -23,7 +23,7 @@ public class UniverseSandbox {
 	public static int FPSCAP = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FSWIDTH = 3840, FSHEIGHT = 2160,
 			FRAMESKIP = 4, RUNTIME = 40000, THREADCOUNT = 8;
 
-	public static boolean SCREENCAP = false, RENDERLIMIT = false;
+	public static boolean SCREENCAP = false, RENDERLIMIT = false, COLLISION = true;
 
 	private static String screenshotFolder = "D:/Phys Sim/run1/";
 	// End config thing place
@@ -71,6 +71,7 @@ public class UniverseSandbox {
 				}
 			}
 		}
+		
 		new UniverseSandbox();
 	}
 
@@ -106,7 +107,7 @@ public class UniverseSandbox {
 				if (FRAME > RUNTIME && RENDERLIMIT) {
 					close();
 				}
-				// regularComp();
+				//regularComp();
 				multithreadedComp();
 			}
 			// loop display
@@ -123,13 +124,15 @@ public class UniverseSandbox {
 
 	public void regularComp() {
 
-		for (int i = 0; i < stars.size(); i++) {
-			for (int j = i + 1; j < stars.size(); j++) {
-				stars.get(i).collidesWith(stars.get(j));
-			}
-			if (stars.get(i).eaten) {
-				stars.get(i).collisionUpdate();
-				i -= 1;
+		if(COLLISION) {
+			for (int i = 0; i < stars.size(); i++) {
+				for (int j = i + 1; j < stars.size(); j++) {
+					stars.get(i).collidesWith(stars.get(j));
+				}
+				if (stars.get(i).eaten) {
+					stars.get(i).collisionUpdate();
+					i -= 1;
+				}
 			}
 		}
 
@@ -143,26 +146,26 @@ public class UniverseSandbox {
 	}
 
 	public void multithreadedComp() {
-	
-		/*
-		for (int i = 0; i < THREADCOUNT; i++) {
-			threads[i] = new CollisionThread("Thread" + i, i);
-			threads[i].start();
-		}
-		for (int i = 0; i < THREADCOUNT; i++) {
-			try {
-				threads[i].join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+		
+		if(COLLISION) {
+			for (int i = 0; i < THREADCOUNT; i++) {
+				threads[i] = new CollisionThread("Thread" + i, i);
+				threads[i].start();
+			}
+			for (int i = 0; i < THREADCOUNT; i++) {
+				try {
+					threads[i].join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			for (int i = 0; i < stars.size(); i++) {
+				if (UniverseSandbox.stars.get(i).eaten) {
+					UniverseSandbox.stars.get(i).collisionUpdate();
+					i -= 1;
+				}
 			}
 		}
-		for (int i = 0; i < stars.size(); i++) {
-			if (UniverseSandbox.stars.get(i).eaten) {
-				UniverseSandbox.stars.get(i).collisionUpdate();
-				i -= 1;
-			}
-		}
-		*/
 		
 		for (int i = 0; i < THREADCOUNT; i++) {
 			threads[i] = new GravityThread("Thread" + i, i);
@@ -202,14 +205,7 @@ public class UniverseSandbox {
 		return (Sys.getTime() * 1000) / Sys.getTimerResolution();
 	}
 
-	@SuppressWarnings("unused")
-	private void fun_render_1() {
-		stars.add(new PointOfMass(((2 * Display.getWidth() / 10) - (Display.getWidth() / 2)) / scale,
-				((2 * Display.getHeight() / 10) - (Display.getHeight() / 2)) / scale, 0, 0, 8.2 * Math.pow(10, 36), 0,
-				0, 0, solarradius));
-		spawnGalaxy(((8 * Display.getWidth() / 10) - (Display.getWidth() / 2)) / scale,
-				((8 * Display.getHeight() / 10) - (Display.getHeight() / 2)) / scale);
-	}
+	
 
 	// mouse inputs
 	public void mouseaction() {
@@ -377,11 +373,11 @@ public class UniverseSandbox {
 		// scale = 2 * Math.pow(10, -10);
 		// spawnSolarSystem(0, 0);
 
-		// speed = 1 * Math.pow(10, 13);
+		// COLLISION = false;
+		// speed = 1 * Math.pow(10, 14);
 		// scale = 8 * Math.pow(10, -19);
 		// spawnGalaxy(0, 0);
 
-		// fun_render_1();
 	}
 
 	private void spawnCluster(double d, double e) {
@@ -417,9 +413,9 @@ public class UniverseSandbox {
 		double green = 0;
 		double blue = 0;
 
-		double galaxy_type = Math.random();
+		double galaxy_type = (Math.random() + Math.random()) / 2;
 
-		stars.add(new PointOfMass(x, y, 0, 0, mwblackholemass, 0, 0, 0, mwblackholeradius));
+		stars.add(new PointOfMass(x, y, 0, 0, mwblackholemass, 0.1, 0.1, 0.1, mwblackholeradius));
 
 		int count = 0;
 		while (count < number_of_stars) {
@@ -561,9 +557,9 @@ public class UniverseSandbox {
 
 			double gravA = Math.sqrt((G * (solarmass + thisMass)) / (r));
 
-			double red = .4;
-			double green = .3;
-			double blue = .2;
+			double red = .5;
+			double green = .4;
+			double blue = .4;
 
 			stars.add(
 					new PointOfMass((x + dx), (y + dy), gravA, phi + (Math.PI / 2), thisMass, red, green, blue, 50000));
@@ -581,6 +577,8 @@ public class UniverseSandbox {
 		stars.add(new PointOfMass(x, y, 0, 0, solarmass, 1, 1, 0, solarradius));
 
 	}
+	
+	
 
 	// i got this screenshot code from stack overflow. It worked so well I had
 	// no need to make my own.
@@ -854,11 +852,7 @@ class PointOfMass {
 	
 	public void mtAttraction(PointOfMass that) {
 		if (that != this) {
-			if (that.dvx == 0 && that.dvy == 0) {
-				that.dvx = that.vx;
-				that.dvy = that.vy;
-			}
-
+			
 			if (dvx == 0 && dvy == 0) {
 				dvx = vx;
 				dvy = vy;
@@ -996,7 +990,6 @@ class GravityThread extends PhysicsThread {
 				UniverseSandbox.stars.get(i).mtAttraction(UniverseSandbox.stars.get(j));
 			}
 		}
-		// System.out.println(super.thread + " " + (System.nanoTime() -
-		// super.starttime));
+		//System.out.println(super.thread + " " + (System.nanoTime() - super.starttime));
 	}
 }
