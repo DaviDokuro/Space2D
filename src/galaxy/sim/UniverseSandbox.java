@@ -20,22 +20,23 @@ import org.lwjgl.*;
 public class UniverseSandbox {
 
 	// USER CONFIGURABLE
-	public static int FPSCAP = 60, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FSWIDTH = 3840, FSHEIGHT = 2160,
-			FRAMESKIP = 4, RUNTIME = 40000, THREADCOUNT = 8;
+	public static int FPSCAP = 1000, FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FSWIDTH = 3840, FSHEIGHT = 2160,
+			FRAMEINTERVAL = 100, RUNTIME = 1000000, THREADCOUNT = 24;
 
-	public static boolean SCREENCAP = false, RENDERLIMIT = false, COLLISION = true;
-
-	private static String screenshotFolder = "D:/Phys Sim/run1/";
-	// End config thing place
+	public static boolean SCREENCAP = false, RENDERLIMIT = true, COLLISION = true;
 
 	public static double speed = 1 * Math.pow(10, 3), scale = 1 * Math.pow(10, -8);
 
-	public static double cameraX = (FRAMEWIDTH / 2), cameraY = (FRAMEHEIGHT / 2);
-	// The camera is at resolution scale. It will contain values typically in
-	// the hundreds, unlike points of mass whose position contains values of
-	// trillions and so on.
+	private static String screenshotFolder = "D:/Phys Sim/";
+	private static String projectName = "SolarSystem2";
+	// End config
 
-	public static int currentFPS, lastFPS;
+	public static double cameraX = (FRAMEWIDTH / 2), cameraY = (FRAMEHEIGHT / 2);
+	// The camera is at resolution scale. It will contain values typically in the
+	// hundreds and thousands, unlike points of mass whose position contains values
+	// of trillions and so on.
+
+	public static double FPS;
 	public static long frameTime;
 	public static int FRAME = 0;
 	// Universal Constants and Measures
@@ -51,7 +52,7 @@ public class UniverseSandbox {
 	boolean rulerStart = false;
 	double rulerX = 0, rulerY = 0; // in meters
 
-	static List<PointOfMass> stars = new ArrayList<PointOfMass>();
+	static List<PointOfMass> universe = new ArrayList<PointOfMass>();
 
 	static PhysicsThread[] threads = new PhysicsThread[THREADCOUNT];
 
@@ -70,8 +71,20 @@ public class UniverseSandbox {
 					// handle it
 				}
 			}
+
+			theDir = new File(screenshotFolder + projectName + "/");
+
+			// if the directory does not exist, create it
+			if (!theDir.exists()) {
+
+				try {
+					theDir.mkdir();
+				} catch (SecurityException se) {
+					// handle it
+				}
+			}
 		}
-		
+
 		new UniverseSandbox();
 	}
 
@@ -87,10 +100,9 @@ public class UniverseSandbox {
 			e.printStackTrace();
 		}
 
-		init();
+		initOGL();
 		spawnBalls();
 
-		frameTime = getTime();
 		while (!Display.isCloseRequested()) {
 
 			mouseaction();
@@ -98,7 +110,7 @@ public class UniverseSandbox {
 			render();
 			Display.update();
 			if (!paused) {
-				if (FRAME % FRAMESKIP == 0 && SCREENCAP) {
+				if (FRAME % FRAMEINTERVAL == 0 && SCREENCAP) {
 					screenShot();
 				}
 
@@ -107,16 +119,17 @@ public class UniverseSandbox {
 				if (FRAME > RUNTIME && RENDERLIMIT) {
 					close();
 				}
-				//regularComp();
-				multithreadedComp();
+
+				if (THREADCOUNT > 1) {
+					multithreadedComp();
+				} else {
+					regularComp();
+				}
 			}
 			// loop display
-			Display.sync((int) FPSCAP);
+			// Display.sync((int) FPSCAP);
 			updateFPS();
-			if (Display.wasResized()) {
-				glViewport(0, 0, Display.getWidth(), Display.getHeight());
-				updateTitle();
-			}
+			updateTitle();
 		}
 
 		close();
@@ -124,30 +137,30 @@ public class UniverseSandbox {
 
 	public void regularComp() {
 
-		if(COLLISION) {
-			for (int i = 0; i < stars.size(); i++) {
-				for (int j = i + 1; j < stars.size(); j++) {
-					stars.get(i).collidesWith(stars.get(j));
+		if (COLLISION) {
+			for (int i = 0; i < universe.size(); i++) {
+				for (int j = i + 1; j < universe.size(); j++) {
+					universe.get(i).collidesWith(universe.get(j));
 				}
-				if (stars.get(i).eaten) {
-					stars.get(i).collisionUpdate();
+				if (universe.get(i).eaten) {
+					universe.get(i).collisionUpdate();
 					i -= 1;
 				}
 			}
 		}
 
-		for (int i = 0; i < stars.size(); i++) {
-			for (int j = i + 1; j < stars.size(); j++) {
-				stars.get(i).attractedTo(stars.get(j));
+		for (int i = 0; i < universe.size(); i++) {
+			for (int j = i + 1; j < universe.size(); j++) {
+				universe.get(i).attractedTo(universe.get(j));
 			}
-			stars.get(i).positionUpdate();
+			universe.get(i).positionUpdate();
 		}
 
 	}
 
 	public void multithreadedComp() {
-		
-		if(COLLISION) {
+
+		if (COLLISION) {
 			for (int i = 0; i < THREADCOUNT; i++) {
 				threads[i] = new CollisionThread("Thread" + i, i);
 				threads[i].start();
@@ -159,14 +172,14 @@ public class UniverseSandbox {
 					e.printStackTrace();
 				}
 			}
-			for (int i = 0; i < stars.size(); i++) {
-				if (UniverseSandbox.stars.get(i).eaten) {
-					UniverseSandbox.stars.get(i).collisionUpdate();
+			for (int i = 0; i < universe.size(); i++) {
+				if (UniverseSandbox.universe.get(i).eaten) {
+					UniverseSandbox.universe.get(i).collisionUpdate();
 					i -= 1;
 				}
 			}
 		}
-		
+
 		for (int i = 0; i < THREADCOUNT; i++) {
 			threads[i] = new GravityThread("Thread" + i, i);
 			threads[i].start();
@@ -178,40 +191,31 @@ public class UniverseSandbox {
 				e.printStackTrace();
 			}
 		}
-		for (int i = 0; i < stars.size(); i++) {
-			UniverseSandbox.stars.get(i).positionUpdate();
+		for (int i = 0; i < universe.size(); i++) {
+			UniverseSandbox.universe.get(i).positionUpdate();
 		}
 
 	}
 
 	public void updateFPS() {
-		if (getTime() - frameTime > 1000) {
-			lastFPS = currentFPS;
-			currentFPS = 0;
-			frameTime += 1000;
-			updateTitle();
-		}
-		currentFPS++;
+
+		long difference = (System.nanoTime() - frameTime) / 1000;
+
+		FPS = 1000000.0 / difference;
+		frameTime = System.nanoTime();
+
 	}
 
 	public void updateTitle() {
-		Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + "  |  Dots: " + stars.size() + "  |  FPS: "
-				+ lastFPS + "  |  Scale: " + String.format("%6.3e", 1 / scale) + " m/px  |  Speed: "
-				+ String.format("%6.3e", speed) + " s/f  |  " + String.format("%6.3e", speed * lastFPS)
-				+ " x Realtime");
+		Display.setTitle(Display.getWidth() + "x" + Display.getHeight() + "  |  Dots: " + universe.size() + "  |  Scale: " + String.format("%6.3e", 1 / scale) + " m/px  |  Speed: "
+				+ String.format("%6.3e", speed) + " s/f  |  " + String.format("%6.3e", speed * FPS) + " x Realtime  |  FPS: " + String.format("%.2f", FPS));
 	}
-
-	public long getTime() {
-		return (Sys.getTime() * 1000) / Sys.getTimerResolution();
-	}
-
-	
 
 	// mouse inputs
 	public void mouseaction() {
 		if (Mouse.isButtonDown(0)) { // add stars of random color at the cursor
 										// with 0 velocity
-			stars.add(new PointOfMass((Mouse.getX() - cameraX) / scale, (Mouse.getY() - cameraY) / scale, 0,
+			universe.add(new PointOfMass((Mouse.getX() - cameraX) / scale, (Mouse.getY() - cameraY) / scale, 0,
 					2 * Math.random() * Math.PI, solarmass, Math.random(), (Math.random() + 1) * .5,
 					(Math.random() + 1) * .5, solarradius));
 		}
@@ -237,7 +241,7 @@ public class UniverseSandbox {
 
 		while (Mouse.next()) {
 			if (Mouse.isButtonDown(4) && Mouse.getEventButton() == 4) {
-				stars.add(new PointOfMass((Mouse.getX() - cameraX) / scale, (Mouse.getY() - cameraY) / scale,
+				universe.add(new PointOfMass((Mouse.getX() - cameraX) / scale, (Mouse.getY() - cameraY) / scale,
 						0 * Math.random(), 2 * Math.random() * Math.PI, solarmass, Math.random(),
 						(Math.random() + 1) * .5, (Math.random() + 1) * .5, solarradius));
 			}
@@ -258,8 +262,6 @@ public class UniverseSandbox {
 			cameraX += camPanX;
 			cameraY += camPanY;
 
-			updateTitle();
-
 		}
 	}
 
@@ -269,7 +271,7 @@ public class UniverseSandbox {
 			close();
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_X)) {
-			stars.add(new PointOfMass(Display.getWidth() / (scale * 2) - (cameraX / scale),
+			universe.add(new PointOfMass(Display.getWidth() / (scale * 2) - (cameraX / scale),
 					Display.getHeight() / (scale * 2) - (cameraY / scale), 0, 0, solarmass, Math.random(),
 					Math.random(), Math.random(), solarradius));
 		}
@@ -299,28 +301,28 @@ public class UniverseSandbox {
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_ADD)) {
 
-			speed *= 1 + 1.0 / (float) lastFPS;
+			speed *= 1 + 1.0 / (float) FPS;
 			updateTitle();
 		}
 		if (Keyboard.isKeyDown(Keyboard.KEY_SUBTRACT)) {
-			speed /= 1 + 1.0 / (float) lastFPS;
+			speed /= 1 + 1.0 / (float) FPS;
 			updateTitle();
 		}
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
-			stars.add(new PointOfMass(((Display.getWidth() * Math.random()) / scale) - (cameraX / scale),
+			universe.add(new PointOfMass(((Display.getWidth() * Math.random()) / scale) - (cameraX / scale),
 					((Display.getHeight() * Math.random()) / scale) - (cameraY / scale), 0, 2 * Math.random() * Math.PI,
 					solarmass, Math.random(), Math.random(), Math.random(), solarradius));
 
 		}
 		while (Keyboard.next()) {
 			if (Keyboard.getEventKey() == Keyboard.KEY_C && Keyboard.getEventKeyState()) {
-				stars.add(new PointOfMass((Display.getWidth() / (2 * scale)) - (cameraX / scale),
+				universe.add(new PointOfMass((Display.getWidth() / (2 * scale)) - (cameraX / scale),
 						(Display.getHeight() / (2 * scale)) - (cameraY / scale), 0, 2 * Math.random() * Math.PI,
 						solarmass, Math.random(), Math.random(), Math.random(), solarradius));
 			}
 			if (Keyboard.getEventKey() == Keyboard.KEY_S && Keyboard.getEventKeyState()) {
-				System.out.println(stars.size());
+				System.out.println(universe.size());
 			}
 
 			if (Keyboard.getEventKey() == Keyboard.KEY_G && Keyboard.getEventKeyState()) {
@@ -339,7 +341,7 @@ public class UniverseSandbox {
 				paused = !paused;
 			}
 			if (Keyboard.getEventKey() == Keyboard.KEY_R && Keyboard.getEventKeyState()) {
-				stars = new ArrayList<PointOfMass>();
+				universe = new ArrayList<PointOfMass>();
 				spawnBalls();
 			}
 			if (Keyboard.getEventKey() == Keyboard.KEY_F11 && Keyboard.getEventKeyState()) {
@@ -369,14 +371,15 @@ public class UniverseSandbox {
 	}
 
 	public void spawnBalls() {
-		// speed = 1 * Math.pow(10, 5);
-		// scale = 2 * Math.pow(10, -10);
-		// spawnSolarSystem(0, 0);
 
-		// COLLISION = false;
-		// speed = 1 * Math.pow(10, 14);
-		// scale = 8 * Math.pow(10, -19);
-		// spawnGalaxy(0, 0);
+//		speed = 4 * Math.pow(10, 3);
+//		scale = 5 * Math.pow(10, -10);
+//		spawnSolarSystem(0, 0);
+
+//		COLLISION = false;
+//		speed = 1 * Math.pow(10, 14);
+//		scale = 6 * Math.pow(10, -18);
+//		spawnGalaxy(0, 0);
 
 	}
 
@@ -396,10 +399,10 @@ public class UniverseSandbox {
 			double dy = (r * Math.sin(phi));
 
 			if (Math.random() > galaxy) {
-				stars.add(new PointOfMass(d + dx, e + dy, 5, phi + (Math.PI / 2), starmass, 1, (Math.random() + 1) * .5,
-						(Math.random() + 1) * .3, solarradius));
+				universe.add(new PointOfMass(d + dx, e + dy, 5, phi + (Math.PI / 2), starmass, 1,
+						(Math.random() + 1) * .5, (Math.random() + 1) * .3, solarradius));
 			} else {
-				stars.add(new PointOfMass(d + dx, e + dy, 5, phi + (Math.PI / 2), starmass, (Math.random() + 1) * .3,
+				universe.add(new PointOfMass(d + dx, e + dy, 5, phi + (Math.PI / 2), starmass, (Math.random() + 1) * .3,
 						(Math.random() + 1) * .5, 1, solarradius));
 			}
 		}
@@ -415,13 +418,13 @@ public class UniverseSandbox {
 
 		double galaxy_type = (Math.random() + Math.random()) / 2;
 
-		stars.add(new PointOfMass(x, y, 0, 0, mwblackholemass, 0.1, 0.1, 0.1, mwblackholeradius));
+		universe.add(new PointOfMass(x, y, 0, 0, mwblackholemass, 0.1, 0.1, 0.1, mwblackholeradius));
 
 		int count = 0;
 		while (count < number_of_stars) {
 			double phi = 2 * Math.random() * Math.PI;
 
-			double r = Math.pow(10, 19) + Math.random() * radius_of_milky_way;
+			double r = Math.pow(10, 19) + Math.random() * radius_of_milky_way / 8;
 
 			double dx = (r * Math.cos(phi));
 			double dy = (r * Math.sin(phi));
@@ -440,7 +443,7 @@ public class UniverseSandbox {
 				green = (Math.random() + 1) * .5;
 				blue = 1;
 			}
-			stars.add(new PointOfMass((x + dx), (y + dy), blackgrav, phi + (Math.PI / 2), thisStarMass, red, green,
+			universe.add(new PointOfMass((x + dx), (y + dy), blackgrav, phi + (Math.PI / 2), thisStarMass, red, green,
 					blue, solarradius));
 			count++;
 		}
@@ -448,9 +451,9 @@ public class UniverseSandbox {
 
 	private void spawnSolarSystem(double x, double y) {
 
-		double planet[][] = new double[8][7]; // planets 1 through 8; 1=mass,
-												// 2=velocity, 3=orbit radius,
-												// 4=planet radius, 5=red, 6=green, 7=blue
+		double planet[][] = new double[8][7]; // planets 1 through 8; 0=mass,
+												// 1=velocity, 2=orbit radius,
+												// 3=planet radius, 4=red, 5=green, 6=blue
 
 		planet[0][0] = 3.285 * Math.pow(10, 23); // mercury
 		planet[0][1] = 47360;
@@ -517,12 +520,13 @@ public class UniverseSandbox {
 		planet[7][6] = 226;
 
 		// add moon?
-		stars.add(new PointOfMass((x + planet[2][2] + 385000000.0), y, planet[2][1] + 1023.056, Math.PI / 2,
+
+		universe.add(new PointOfMass((x + planet[2][2] + 385000000.0), y, planet[2][1] + 1023.056, Math.PI / 2,
 				7.34767309 * Math.pow(10, 22), 1, 1, 1, 1737000.0));
 
 		// Add asteroid belt
 		int count = 0;
-		while (count < 800) {
+		while (count < 2000) {
 			double phi = 2 * Math.random() * Math.PI;
 
 			double r = (3 * Math.pow(10, 11)) + (Math.random() * 5 * Math.pow(10, 11));
@@ -538,14 +542,14 @@ public class UniverseSandbox {
 			double green = .3;
 			double blue = .2;
 
-			stars.add(
+			universe.add(
 					new PointOfMass((x + dx), (y + dy), gravA, phi + (Math.PI / 2), thisMass, red, green, blue, 50000));
 			count++;
 		}
 
 		// Add Keiper belt
 		count = 0;
-		while (count < 200) {
+		while (count < 100) {
 			double phi = 2 * Math.random() * Math.PI;
 
 			double r = (30 * planet[2][2]) + (Math.random() * 20 * planet[2][2]);
@@ -561,24 +565,22 @@ public class UniverseSandbox {
 			double green = .4;
 			double blue = .4;
 
-			stars.add(
+			universe.add(
 					new PointOfMass((x + dx), (y + dy), gravA, phi + (Math.PI / 2), thisMass, red, green, blue, 50000));
 			count++;
 		}
 
 		// add planets
-		for (int i = 0; i < 8; i++) {
-			stars.add(new PointOfMass((x + planet[i][2]), y, planet[i][1], Math.PI / 2, planet[i][0],
+		for (int i = 0; i < planet.length; i++) {
+			universe.add(new PointOfMass((x + planet[i][2]), y, planet[i][1], Math.PI / 2, planet[i][0],
 					planet[i][4] / 255, planet[i][5] / 255, planet[i][6] / 255, planet[i][3]));
 
 		}
 
 		// add sun
-		stars.add(new PointOfMass(x, y, 0, 0, solarmass, 1, 1, 0, solarradius));
+		universe.add(new PointOfMass(x, y, 16.2, 1.5 * Math.PI, solarmass, 1, 1, 0, solarradius));
 
 	}
-	
-	
 
 	// i got this screenshot code from stack overflow. It worked so well I had
 	// no need to make my own.
@@ -612,7 +614,8 @@ public class UniverseSandbox {
 		BufferedImage imageOut = opRotated.filter(imageIn, null);
 
 		try {// Try to create image, else show exception.
-			ImageIO.write(imageOut, "png", new File(screenshotFolder + "capture" + (int) (FRAME / FRAMESKIP) + ".png"));
+			ImageIO.write(imageOut, "png", new File(
+					screenshotFolder + projectName + "/" + "capture" + (int) (FRAME / FRAMEINTERVAL) + ".png"));
 		} catch (Exception e) {
 			System.out.println("ScreenShot() exception: " + e);
 		}
@@ -684,12 +687,12 @@ public class UniverseSandbox {
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		for (PointOfMass b : stars) {
+		for (PointOfMass b : universe) {
 			b.draw();
 		}
 	}
 
-	public void init() {
+	public void initOGL() {
 		// always here code OGL
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
@@ -708,9 +711,11 @@ public class UniverseSandbox {
 
 class PointOfMass {
 
-	double drawAngle = 30;
+	double drawAngle = 5;
+	double drawAngleLOD = 60;
 
 	private int SEGMENTS = (int) (360 / drawAngle);
+	private int SEGMENTSLOD = (int) (360 / drawAngleLOD);
 
 	public double x, y, vx, vy, dvx, dvy, m;
 	private double colorRed, colorBlue, colorGreen;
@@ -719,7 +724,7 @@ class PointOfMass {
 	public boolean eaten = false;
 
 	private double[][] ballPoints = new double[SEGMENTS][2];
-	private double[][] ballPointsSmall = new double[SEGMENTS][2];
+	private double[][] ballPointsSmall = new double[SEGMENTSLOD][2];
 
 	PointOfMass(double x, double y, double v, double theta, double mass, double red, double green, double blue,
 			double radius) {
@@ -738,20 +743,6 @@ class PointOfMass {
 
 		tellTheCircleHowToBeDrawn();
 		tellTheCircleHowToBeDrawn(minrad = 1);
-	}
-
-	private void tellTheCircleHowToBeDrawn() {
-		for (int i = 0; i < SEGMENTS; i++) {
-			ballPoints[i][0] = radius * Math.cos(Math.toRadians(i * drawAngle));
-			ballPoints[i][1] = radius * Math.sin(Math.toRadians(i * drawAngle));
-		}
-	}
-
-	private void tellTheCircleHowToBeDrawn(double radius) {
-		for (int i = 0; i < SEGMENTS; i++) {
-			ballPointsSmall[i][0] = radius * Math.cos(Math.toRadians(i * drawAngle));
-			ballPointsSmall[i][1] = radius * Math.sin(Math.toRadians(i * drawAngle));
-		}
 	}
 
 	boolean inClick(int mousex, int mousey) {
@@ -794,8 +785,8 @@ class PointOfMass {
 					that.eaten = true;
 					this.tellTheCircleHowToBeDrawn();
 				} else {
-					that.dvx = ((that.m * that.vx) + (this.m * this.vx)) / (that.m * 2);
-					that.dvy = ((that.m * that.vy) + (this.m * this.vy)) / (that.m * 2);
+					that.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
+					that.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
 					that.m += this.m;
 					that.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
 					this.eaten = true;
@@ -804,10 +795,25 @@ class PointOfMass {
 			}
 		}
 	}
+	
+	public void collidesWithMT(PointOfMass that) {
+		if (that != this) {
+			if (!this.eaten && !that.eaten && checkTrec(that)) {
+				if (this.m >= that.m) {
+					this.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
+					this.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
+					this.m += that.m;
+					this.radius = Math.sqrt((this.radius * this.radius) + (that.radius * that.radius));
+					that.eaten = true;
+					this.tellTheCircleHowToBeDrawn();
+				} 
+			}
+		}
+	}
 
 	public void collisionUpdate() {
 		if (eaten) {
-			UniverseSandbox.stars.remove(this);
+			UniverseSandbox.universe.remove(this);
 		}
 	}
 
@@ -829,12 +835,12 @@ class PointOfMass {
 			double dx2 = dx * dx;
 			double dy2 = dy * dy;
 
-			effGrav(that, dx, dy, dx2 + dy2);
+			gravityCalc(that, dx, dy, dx2 + dy2);
 
 		}
 	}
 
-	public void effGrav(PointOfMass that, double dx, double dy, double r2) {
+	public void gravityCalc(PointOfMass that, double dx, double dy, double r2) {
 		double G = UniverseSandbox.G;
 
 		double h = Math.sqrt(r2);
@@ -849,10 +855,10 @@ class PointOfMass {
 		this.dvy += (fy * UniverseSandbox.speed) / (this.m);
 
 	}
-	
-	public void mtAttraction(PointOfMass that) {
+
+	public void attractedToMT(PointOfMass that) {
 		if (that != this) {
-			
+
 			if (dvx == 0 && dvy == 0) {
 				dvx = vx;
 				dvy = vy;
@@ -864,12 +870,12 @@ class PointOfMass {
 			double dx2 = dx * dx;
 			double dy2 = dy * dy;
 
-			ineffGrav(that, dx, dy, dx2 + dy2);
+			gravityCalcMT(that, dx, dy, dx2 + dy2);
 
 		}
 	}
-	
-	public void ineffGrav(PointOfMass that, double dx, double dy, double r2) {
+
+	public void gravityCalcMT(PointOfMass that, double dx, double dy, double r2) {
 		double G = UniverseSandbox.G;
 
 		double h = Math.sqrt(r2);
@@ -891,6 +897,21 @@ class PointOfMass {
 		y += vy * UniverseSandbox.speed;
 
 	}
+	
+
+	private void tellTheCircleHowToBeDrawn() {
+		for (int i = 0; i < SEGMENTS; i++) {
+			ballPoints[i][0] = radius * Math.cos(Math.toRadians(i * drawAngle));
+			ballPoints[i][1] = radius * Math.sin(Math.toRadians(i * drawAngle));
+		}
+	}
+
+	private void tellTheCircleHowToBeDrawn(double radius) {
+		for (int i = 0; i < SEGMENTSLOD; i++) {
+			ballPointsSmall[i][0] = radius * Math.cos(Math.toRadians(i * drawAngleLOD));
+			ballPointsSmall[i][1] = radius * Math.sin(Math.toRadians(i * drawAngleLOD));
+		}
+	}
 
 	public void draw() {
 		glColor3f((float) colorRed, (float) colorGreen, (float) colorBlue);
@@ -903,7 +924,7 @@ class PointOfMass {
 
 		if (radiusToDraw < minrad) {
 			glBegin(GL_POLYGON);
-			for (int i = 0; i < SEGMENTS; i++) {
+			for (int i = 0; i < SEGMENTSLOD; i++) {
 				glVertex2i((int) (xToDraw + ballPointsSmall[i][0]), (int) (yToDraw + ballPointsSmall[i][1]));
 			}
 			glEnd();
@@ -943,12 +964,13 @@ class PhysicsThread extends Thread {
 
 	private int makeIndex(int thread) {
 
-		int top = (thread * UniverseSandbox.stars.size()) / (UniverseSandbox.THREADCOUNT);
+		int top = (thread * UniverseSandbox.universe.size()) / (UniverseSandbox.THREADCOUNT);
 
-		//double logging = Math.log(thread + 1) / Math.log(UniverseSandbox.THREADCOUNT + 1);
+		// double logging = Math.log(thread + 1) / Math.log(UniverseSandbox.THREADCOUNT
+		// + 1);
 
-		//return (int) (top * logging);
-		
+		// return (int) (top * logging);
+
 		return top;
 
 	}
@@ -966,8 +988,8 @@ class CollisionThread extends PhysicsThread {
 		int startpoint = startIndex();
 		int endpoint = endIndex();
 		for (int i = startpoint; i < endpoint; i++) {
-			for (int j = i + 1; j < UniverseSandbox.stars.size(); j++) {
-				UniverseSandbox.stars.get(i).collidesWith(UniverseSandbox.stars.get(j));
+			for (int j = 0; j < UniverseSandbox.universe.size(); j++) {
+				UniverseSandbox.universe.get(i).collidesWithMT(UniverseSandbox.universe.get(j));
 			}
 		}
 		// System.out.println(super.thread + " " + (System.nanoTime() -
@@ -986,10 +1008,11 @@ class GravityThread extends PhysicsThread {
 		int startpoint = startIndex();
 		int endpoint = endIndex();
 		for (int i = startpoint; i < endpoint; i++) {
-			for (int j = 0; j < UniverseSandbox.stars.size(); j++) {
-				UniverseSandbox.stars.get(i).mtAttraction(UniverseSandbox.stars.get(j));
+			for (int j = 0; j < UniverseSandbox.universe.size(); j++) {
+				UniverseSandbox.universe.get(i).attractedToMT(UniverseSandbox.universe.get(j));
 			}
 		}
-		//System.out.println(super.thread + " " + (System.nanoTime() - super.starttime));
+		// System.out.println(super.thread + " " + (System.nanoTime() -
+		// super.starttime));
 	}
 }
