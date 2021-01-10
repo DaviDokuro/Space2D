@@ -1,5 +1,5 @@
 # Space2D
-### A simulation of 2D gravitational bodies written in java. Uses LWJGL Libraries
+### A simulation of 2D gravitational bodies written in Java using LWJGL
 <sub>(working title)</sub>
 
 I made this project many years ago, but have always found myself coming back to it. 
