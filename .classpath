@@ -1,29 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Universe Sandbox/lib/natives-win"/>
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/AppleJavaExtensions.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/asm-debug-all.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/jinput.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/laf-plugin-7.2.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/laf-widget-7.2.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/log4j-api-2.0-beta9.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/lwjgl_test.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/lwjgl_util_applet.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/lwjgl_util.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/lwjgl-debug.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/lwjgl.jar">
+	<classpathentry kind="src" path="src">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Universe Sandbox/lwjgl-2.9.3/native/windows"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Space 2D/lwjgl-2.9.3/native/windows"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/lzma.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/substance-7.2.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/trident-7.2.1.jar"/>
+	<classpathentry kind="src" path="lwjgl-2.9.3/native/windows"/>
+	<classpathentry exported="true" kind="lib" path="lwjgl-2.9.3/jar/lwjgl.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Space 2D/lwjgl-2.9.3/native/windows"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
