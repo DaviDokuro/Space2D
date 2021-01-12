@@ -696,6 +696,10 @@ public class Space2D {
 
 			Display.setDisplayMode(targetDisplayMode);
 			Display.setFullscreen(fullscreen);
+			if(!fullscreen) {
+				Display.setResizable(false);
+				Display.setResizable(true);
+			}
 			glLoadIdentity();
 			glOrtho(0, width, 0, height, 1, -1);
 			glViewport(0, 0, width, height);
