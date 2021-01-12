@@ -24,9 +24,9 @@ public class Space2D {
 	// USER CONFIGURABLE
 	public static int FRAMEWIDTH = 1920, FRAMEHEIGHT = 1080, FRAMEINTERVAL = 100, CAPTUREDFRAMES = 10000;
 
-	public static boolean VSYNC = false, SCREENCAP = false, COLLISION = true, MULTITHREADED = false;
+	public static boolean VSYNC = true, SCREENCAP = false, COLLISION = true, MULTITHREADED = false;
 
-	public static double speed = 1 * Math.pow(10, 3), scale = 1 * Math.pow(10, -8);
+	public static double speed = 6 * Math.pow(10, 2), scale = 1 * Math.pow(10, -8);
 
 	private static String screenshotFolder = "D:/Phys Sim/";
 	private static String projectName = "SolarSystem2";
@@ -40,16 +40,15 @@ public class Space2D {
 	public static double FPS;
 	public static long frameTime;
 	public static long FRAME = 0;
-	
-	
+
 	public static int CORECOUNT = Runtime.getRuntime().availableProcessors();
 	public static int THREADCOUNT = CORECOUNT;
-	
+
 	public static GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 	public static int FSWIDTH = gd.getDisplayMode().getWidth();
 	public static int FSHEIGHT = gd.getDisplayMode().getHeight();
 	public static int refreshRate = gd.getDisplayMode().getRefreshRate();
-	
+
 	// Universal Constants and Measures
 	public static double G = 6.673 * Math.pow(10, -11); // Newton meters Squared
 														// per kg Squared
@@ -101,18 +100,6 @@ public class Space2D {
 
 	public Space2D() {
 
-		try {
-			Display.setDisplayMode(new DisplayMode((int) FRAMEWIDTH, (int) FRAMEHEIGHT));
-			Display.setTitle("Play with the universe!");
-			Display.setResizable(true);
-			Display.setVSyncEnabled(false);
-			Display.create();
-		} catch (LWJGLException e) {
-			e.printStackTrace();
-		}
-		
-		
-
 		initOGL();
 		spawnBalls();
 
@@ -120,31 +107,40 @@ public class Space2D {
 
 			mouseaction();
 			keypresses();
-			render();
-			Display.update();
 			if (!paused) {
+
 				if (FRAME % FRAMEINTERVAL == 0 && SCREENCAP) {
 					screenShot();
 				}
-
 				FRAME++;
-
 				if (FRAME > CAPTUREDFRAMES * FRAMEINTERVAL && !SCREENCAP) {
 					SCREENCAP = false;
 				}
-				
-				
+
 				if (MULTITHREADED) {
 					multithreadedComp();
 				} else {
 					regularComp();
 				}
+
 			}
+
 			// sync display
+			if (Display.wasResized()) {
+				glLoadIdentity();
+				glOrtho(0, Display.getWidth(), 0, Display.getHeight(), 1, -1);
+				glViewport(0, 0, Display.getWidth(), Display.getHeight());
+				camera.pan((Display.getWidth() - FRAMEWIDTH) / 2, (Display.getHeight() - FRAMEHEIGHT) / 2);
+				FRAMEWIDTH = Display.getWidth();
+				FRAMEHEIGHT = Display.getHeight();
+			}
+			render();
 			if (VSYNC)
 				Display.sync((int) refreshRate);
+			Display.update();
 			updateFPS();
 			updateTitle();
+
 		}
 
 		close();
@@ -152,31 +148,53 @@ public class Space2D {
 
 	public void regularComp() {
 
-		for (int i = 0; i < universe.size(); i++) {
-			for (int j = i + 1; j < universe.size(); j++) {
-				universe.get(i).attractedTo(universe.get(j));
-			}
-		}
-		
 		if (COLLISION) {
 			for (int i = 0; i < universe.size(); i++) {
 				for (int j = i + 1; j < universe.size(); j++) {
 					universe.get(i).collidesWith(universe.get(j));
 				}
 			}
-		}
-		for (int i = 0; i < universe.size(); i++) {		
-			if (universe.get(i).eaten) {
-				universe.get(i).collisionUpdate();
-				i -= 1;
-			} else {
-				universe.get(i).positionUpdate();
+			for (int i = 0; i < universe.size(); i++) {
+				if (universe.get(i).eaten) {
+					universe.get(i).collisionUpdate();
+					i -= 1;
+				}
 			}
+		}
+
+		for (int i = 0; i < universe.size(); i++) {
+			for (int j = i + 1; j < universe.size(); j++) {
+				universe.get(i).attractedTo(universe.get(j));
+			}
+		}
+
+		for (int i = 0; i < universe.size(); i++) {
+			universe.get(i).positionUpdate();
 		}
 
 	}
 
 	public void multithreadedComp() {
+
+		if (COLLISION) {
+			for (int i = 0; i < THREADCOUNT; i++) {
+				threads[i] = new CollisionThread("Thread" + i, i);
+				threads[i].start();
+			}
+			for (int i = 0; i < THREADCOUNT; i++) {
+				try {
+					threads[i].join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			for (int i = 0; i < universe.size(); i++) {
+				if (universe.get(i).eaten) {
+					universe.get(i).collisionUpdate();
+					i -= 1;
+				}
+			}
+		}
 
 		for (int i = 0; i < THREADCOUNT; i++) {
 			threads[i] = new GravityThread("Thread" + i, i);
@@ -190,27 +208,8 @@ public class Space2D {
 			}
 		}
 
-		if (COLLISION) {
-			for (int i = 0; i < THREADCOUNT; i++) {
-				threads[i] = new CollisionThread("Thread" + i, i);
-				threads[i].start();
-			}
-			for (int i = 0; i < THREADCOUNT; i++) {
-				try {
-					threads[i].join();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}			
-		}
-		
-		for (int i = 0; i < universe.size(); i++) {		
-			if (universe.get(i).eaten) {
-				universe.get(i).collisionUpdate();
-				i -= 1;
-			} else {
-				universe.get(i).positionUpdate();
-			}
+		for (int i = 0; i < universe.size(); i++) {
+			universe.get(i).positionUpdate();
 		}
 
 	}
@@ -284,13 +283,13 @@ public class Space2D {
 		if (Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
 			close();
 		}
-		
+
 		if (Keyboard.isKeyDown(Keyboard.KEY_X)) {
 			universe.add(new CelestialBody(Display.getWidth() / (scale * 2) - (camera.x / scale),
 					Display.getHeight() / (scale * 2) - (camera.y / scale), 0, 0, solarmass, Math.random(),
 					Math.random(), Math.random(), solarradius));
 		}
-		
+
 		if (Keyboard.isKeyDown(Keyboard.KEY_V)) {
 			camera.pan(Mouse.getDX(), Mouse.getDY());
 		}
@@ -314,7 +313,7 @@ public class Space2D {
 		if (Keyboard.isKeyDown(Keyboard.KEY_ADD)) {
 			speed *= 1 + 1.0 / (float) FPS;
 		}
-		
+
 		if (Keyboard.isKeyDown(Keyboard.KEY_SUBTRACT)) {
 			speed /= 1 + 1.0 / (float) FPS;
 		}
@@ -325,14 +324,12 @@ public class Space2D {
 					2 * Math.random() * Math.PI, solarmass, Math.random(), Math.random(), Math.random(), solarradius));
 
 		}
-		
+
 		while (Keyboard.next()) {
 			if (Keyboard.getEventKey() == Keyboard.KEY_C && Keyboard.getEventKeyState()) {
-				universe.add(new CelestialBody((Display.getWidth() / (2 * scale)) - (camera.x / scale),
-						(Display.getHeight() / (2 * scale)) - (camera.y / scale), 0, 2 * Math.random() * Math.PI,
-						solarmass, Math.random(), Math.random(), Math.random(), solarradius));
+				COLLISION = !COLLISION;
 			}
-			
+
 			if (Keyboard.getEventKey() == Keyboard.KEY_S && Keyboard.getEventKeyState()) {
 				System.out.println(universe.size());
 			}
@@ -352,22 +349,22 @@ public class Space2D {
 			if (Keyboard.getEventKey() == Keyboard.KEY_P && Keyboard.getEventKeyState()) {
 				paused = !paused;
 			}
-			
+
 			if (Keyboard.getEventKey() == Keyboard.KEY_M && Keyboard.getEventKeyState()) {
 				MULTITHREADED = !MULTITHREADED;
 			}
-			
+
 			if (Keyboard.getEventKey() == Keyboard.KEY_R && Keyboard.getEventKeyState()) {
 				universe = new ArrayList<CelestialBody>();
 				spawnBalls();
 			}
-			
-			if (Keyboard.getEventKey() == Keyboard.KEY_F10 && Keyboard.getEventKeyState()) {				
-				VSYNC = !VSYNC;				
+
+			if (Keyboard.getEventKey() == Keyboard.KEY_F10 && Keyboard.getEventKeyState()) {
+				VSYNC = !VSYNC;
 			}
-			
+
 			if (Keyboard.getEventKey() == Keyboard.KEY_F11 && Keyboard.getEventKeyState()) {
-				
+
 				if (Display.isFullscreen()) {
 					setDisplayMode(FRAMEWIDTH, FRAMEHEIGHT, false);
 					camera.pan((FRAMEWIDTH - FSWIDTH) / 2, (FRAMEHEIGHT - FSHEIGHT) / 2);
@@ -380,7 +377,7 @@ public class Space2D {
 		}
 	}
 
-	private void ruler(double x, double y) {
+	public void ruler(double x, double y) {
 		if (!rulerStart) {
 			rulerStart = true;
 			rulerX = x;
@@ -404,7 +401,7 @@ public class Space2D {
 
 	}
 
-	public void spawnCluster(double d, double e) {
+	public void spawnCluster(double x, double y) {
 		double starmass = solarmass;
 		double radius = Math.pow(10, 12);
 		double number = 100;
@@ -420,10 +417,10 @@ public class Space2D {
 			double dy = (r * Math.sin(phi));
 
 			if (Math.random() > galaxy) {
-				universe.add(new CelestialBody(d + dx, e + dy, 5, phi + (Math.PI / 2), starmass, 1,
+				universe.add(new CelestialBody(x + dx, y + dy, 5, phi + (Math.PI / 2), starmass, 1,
 						(Math.random() + 1) * .5, (Math.random() + 1) * .3, solarradius));
 			} else {
-				universe.add(new CelestialBody(d + dx, e + dy, 5, phi + (Math.PI / 2), starmass,
+				universe.add(new CelestialBody(x + dx, y + dy, 5, phi + (Math.PI / 2), starmass,
 						(Math.random() + 1) * .3, (Math.random() + 1) * .5, 1, solarradius));
 			}
 		}
@@ -445,7 +442,7 @@ public class Space2D {
 		while (count < number_of_stars) {
 			double phi = 2 * Math.random() * Math.PI;
 
-			double r = Math.pow(10, 19) + Math.random() * radius_of_milky_way / 8;
+			double r = Math.pow(10, 16) + Math.random() * radius_of_milky_way / 8;
 
 			double dx = (r * Math.cos(phi));
 			double dy = (r * Math.sin(phi));
@@ -543,7 +540,7 @@ public class Space2D {
 		// add moon?
 
 		universe.add(new CelestialBody((x + planet[2][2] + 385000000.0), y, planet[2][1] + 1023.056, Math.PI / 2,
-				7.34767309 * Math.pow(10, 22), 1, 1, 1, 1737000.0));
+				7.34767309 * Math.pow(10, 22), 0.5, 0.5, 0.5, 1737000.0));
 
 		// Add asteroid belt
 		int count = 0;
@@ -599,7 +596,8 @@ public class Space2D {
 		}
 
 		// add sun
-		universe.add(new CelestialBody(x, y, 16.2, 1.5 * Math.PI, solarmass, 1, 1, 0, solarradius));
+		universe.add(
+				new CelestialBody(x - (solarradius * 1.3), y, 16.0103, 1.5 * Math.PI, solarmass, 1, 1, 0, solarradius));
 
 	}
 
@@ -714,11 +712,21 @@ public class Space2D {
 		for (CelestialBody b : universe) {
 			b.draw();
 		}
+
 	}
 
 	private void initOGL() {
 
-		// always here code OGL
+		try {
+			Display.setDisplayMode(new DisplayMode((int) FRAMEWIDTH, (int) FRAMEHEIGHT));
+			Display.setTitle("Play with the universe!");
+			Display.setResizable(true);
+			Display.setVSyncEnabled(false);
+			Display.create();
+		} catch (LWJGLException e) {
+			e.printStackTrace();
+		}
+
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(0, FRAMEWIDTH, 0, FRAMEHEIGHT, 1, -1);
@@ -741,7 +749,7 @@ class CelestialBody {
 	private int SEGMENTS = (int) (360 / drawAngle);
 	private int SEGMENTSLOD = (int) (360 / drawAngleLOD);
 
-	public double x, y, vx, vy, dvx, dvy, m;
+	public double x, y, vx, vy, m;
 	private double colorRed, colorBlue, colorGreen;
 	private double radius, minrad = 1;
 
@@ -756,8 +764,6 @@ class CelestialBody {
 		this.y = y;
 		this.vx = v * Math.cos(theta);
 		this.vy = v * Math.sin(theta);
-		this.dvx = 0;
-		this.dvy = 0;
 		this.m = mass;
 		this.radius = radius;
 
@@ -778,19 +784,60 @@ class CelestialBody {
 		return false;
 	}
 
-	public boolean checkTrec(CelestialBody that) {
+	public boolean simpleCollision(CelestialBody that) {
 		// add code to do something
 		// hopefully to prevent garbage spewing everywhere
 
 		double dx = (that.x - this.x);
 		double dy = (that.y - this.y);
-
 		double dx2 = dx * dx;
 		double dy2 = dy * dy;
+		double r = Math.sqrt((dx2 + dy2));
 
-		double h = Math.sqrt((dx2 + dy2));
+		double touchingDistance = this.radius + that.radius;
 
-		if ((h <= this.radius + that.radius)) {
+		if (r <= touchingDistance) {
+			return true;
+		}
+
+		return false;
+
+	}
+
+	public boolean complexCollision(CelestialBody that) {
+
+		double dx = (that.x - this.x);
+		double dy = (that.y - this.y);
+		double dx2 = dx * dx;
+		double dy2 = dy * dy;
+		double r = Math.sqrt((dx2 + dy2));
+
+		double touchingDistance = this.radius + that.radius;
+		double delta = Math.sqrt(Math.pow(this.vx - that.vx, 2) + Math.pow(this.vy - that.vy, 2)) * Space2D.speed;
+
+		if (r <= touchingDistance || r <= touchingDistance + delta) {
+			return true;
+		}
+
+		return false;
+
+	}
+
+	public boolean hitTargetCollision(CelestialBody that) {
+
+		double dx = (that.x - this.x);
+		double dy = (that.y - this.y);
+		double dx2 = dx * dx;
+		double dy2 = dy * dy;
+		double r = Math.sqrt((dx2 + dy2));
+		double passingDistance = Double.POSITIVE_INFINITY;
+		if (vx != 0 || vy != 0)
+			passingDistance = Math.abs((vx * (this.y - that.y)) - ((this.x - that.x) * vy))
+					/ Math.sqrt((vx * vx) + (vy * vy));
+		double touchingDistance = this.radius + that.radius;
+		double delta = Math.sqrt(Math.pow(this.vx - that.vx, 2) + Math.pow(this.vy - that.vy, 2)) * Space2D.speed;
+
+		if (r <= touchingDistance || (passingDistance <= touchingDistance + delta && r <= touchingDistance + delta)) {
 			return true;
 		}
 
@@ -799,38 +846,38 @@ class CelestialBody {
 	}
 
 	public void collidesWith(CelestialBody that) {
-		if (that != this) {
-			if (!this.eaten && !that.eaten && checkTrec(that)) {
-				if (this.m >= that.m) {
-					this.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
-					this.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
-					this.m += that.m;
-					
-					this.radius = Math.cbrt((this.radius * this.radius * this.radius) + (that.radius * that.radius * that.radius));
-					that.eaten = true;
-					this.setDrawSize();
-				} else {
-					that.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
-					that.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
-					that.m += this.m;
-					
-					that.radius = Math.cbrt((this.radius * this.radius * this.radius) + (that.radius * that.radius * that.radius));
-					this.eaten = true;
-					that.setDrawSize();
-				}
+
+		if (!this.eaten && !that.eaten && this.hitTargetCollision(that)) {
+			if (this.m >= that.m) {
+				this.vx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
+				this.vy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
+				this.m += that.m;
+
+				this.radius = Math.cbrt(Math.pow(this.radius, 3) + Math.pow(that.radius, 3));
+				that.eaten = true;
+				this.setDrawSize();
+			} else {
+				that.vx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
+				that.vy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
+				that.m += this.m;
+
+				that.radius = Math.cbrt(Math.pow(this.radius, 3) + Math.pow(that.radius, 3));
+				this.eaten = true;
+				that.setDrawSize();
 			}
 		}
+
 	}
 
 	public void collidesWithMT(CelestialBody that) {
 		if (that != this) {
-			if (!this.eaten && !that.eaten && checkTrec(that)) {
+			if (!this.eaten && !that.eaten && this.hitTargetCollision(that)) {
 				if (this.m >= that.m) {
-					this.dvx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
-					this.dvy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
+					this.vx = ((this.m * this.vx) + (that.m * that.vx)) / (this.m + that.m);
+					this.vy = ((this.m * this.vy) + (that.m * that.vy)) / (this.m + that.m);
 					this.m += that.m;
-					
-					this.radius = Math.cbrt((this.radius * this.radius * this.radius) + (that.radius * that.radius * that.radius));
+
+					this.radius = Math.cbrt(Math.pow(this.radius, 3) + Math.pow(that.radius, 3));
 					that.eaten = true;
 					this.setDrawSize();
 				}
@@ -846,83 +893,75 @@ class CelestialBody {
 
 	public void attractedTo(CelestialBody that) {
 		if (that != this) {
-			if (that.dvx == 0 && that.dvy == 0) {
-				that.dvx = that.vx;
-				that.dvy = that.vy;
-			}
-
-			if (dvx == 0 && dvy == 0) {
-				dvx = vx;
-				dvy = vy;
-			}
-
 			double dx = (that.x - this.x);
 			double dy = (that.y - this.y);
 
-			double dx2 = dx * dx;
-			double dy2 = dy * dy;
+			if (dx != 0 || dy != 0) {
+				double dx2 = dx * dx;
+				double dy2 = dy * dy;
+				double r2 = dx2 + dy2;
+				double r = Math.sqrt(r2);
 
-			gravityCalc(that, dx, dy, dx2 + dy2);
+				gravityCalc(that, dx, dy, r, r2);
+			}
 
 		}
 	}
 
-	public void gravityCalc(CelestialBody that, double dx, double dy, double r2) {
-		double G = Space2D.G;
+	public void gravityCalc(CelestialBody that, double dx, double dy, double r, double r2) {
 
-		double h = Math.sqrt(r2);
+		double gmm = Space2D.G * this.m * that.m;
 
-		double fx = (G * m * that.m * (dx / h)) / (r2);
-		double fy = (G * m * that.m * (dy / h)) / (r2);
+		double fx = (gmm * (dx / r)) / (r2);
+		double fy = (gmm * (dy / r)) / (r2);
 
-		that.dvx -= (fx * Space2D.speed) / (that.m);
-		that.dvy -= (fy * Space2D.speed) / (that.m);
+		that.vx -= (fx * Space2D.speed) / (that.m);
+		that.vy -= (fy * Space2D.speed) / (that.m);
 
-		this.dvx += (fx * Space2D.speed) / (this.m);
-		this.dvy += (fy * Space2D.speed) / (this.m);
+		this.vx += (fx * Space2D.speed) / (this.m);
+		this.vy += (fy * Space2D.speed) / (this.m);
 
 	}
 
 	public void attractedToMT(CelestialBody that) {
 		if (that != this) {
 
-			if (dvx == 0 && dvy == 0) {
-				dvx = vx;
-				dvy = vy;
-			}
-
 			double dx = (that.x - this.x);
 			double dy = (that.y - this.y);
 
-			double dx2 = dx * dx;
-			double dy2 = dy * dy;
+			if (dx != 0 || dy != 0) {
+				double dx2 = dx * dx;
+				double dy2 = dy * dy;
+				double r2 = dx2 + dy2;
+				double r = Math.sqrt(r2);
 
-			gravityCalcMT(that, dx, dy, dx2 + dy2);
+				gravityCalcMT(that, dx, dy, r, r2);
+			}
 
 		}
 	}
 
-	public void gravityCalcMT(CelestialBody that, double dx, double dy, double r2) {
-		double G = Space2D.G;
+	public void gravityCalcMT(CelestialBody that, double dx, double dy, double r, double r2) {
 
-		double h = Math.sqrt(r2);
+		double gmm = Space2D.G * this.m * that.m;
 
-		double fx = (G * m * that.m * (dx / h)) / (r2);
-		double fy = (G * m * that.m * (dy / h)) / (r2);
+		double fx = (gmm * (dx / r)) / (r2);
+		double fy = (gmm * (dy / r)) / (r2);
 
-		this.dvx += (fx * Space2D.speed) / (this.m);
-		this.dvy += (fy * Space2D.speed) / (this.m);
+		this.vx += (fx * Space2D.speed) / (this.m);
+		this.vy += (fy * Space2D.speed) / (this.m);
 
 	}
 
 	public void positionUpdate() {
-		vx = dvx;
-		vy = dvy;
-		dvx = dvy = 0;
 
 		x += vx * Space2D.speed;
 		y += vy * Space2D.speed;
 
+	}
+
+	public double getVelocityMagnitude() {
+		return Math.sqrt((vx * vx) + (vy * vy));
 	}
 
 	private void setDrawSize() {
@@ -948,8 +987,7 @@ class CelestialBody {
 
 		double radiusToDraw = radius * Space2D.scale;
 
-		if (xToDraw + radiusToDraw > 0 && xToDraw - radiusToDraw < Display.getWidth()
-				&& yToDraw + radiusToDraw > 0
+		if (xToDraw + radiusToDraw > 0 && xToDraw - radiusToDraw < Display.getWidth() && yToDraw + radiusToDraw > 0
 				&& yToDraw - radiusToDraw < Display.getHeight()) {
 
 			if (radiusToDraw < minrad) {
@@ -983,6 +1021,16 @@ class Camera {
 	public void pan(double x, double y) {
 		this.x += x;
 		this.y += y;
+	}
+
+	public void track(double x, double y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	public void track(CelestialBody that) {
+		this.x = (that.x * Space2D.scale) - (Display.getWidth() / 2);
+		this.y = (that.y * Space2D.scale) - (Display.getHeight() / 2);
 	}
 }
 
@@ -1030,15 +1078,16 @@ class CollisionThread extends PhysicsThread {
 
 	@Override
 	public void run() {
-		int startpoint = startIndex();
-		int endpoint = endIndex();
-		for (int i = startpoint; i < endpoint; i++) {
+
+		for (int i = startIndex(); i < endIndex(); i++) {
 			for (int j = 0; j < Space2D.universe.size(); j++) {
 				Space2D.universe.get(i).collidesWithMT(Space2D.universe.get(j));
 			}
 		}
-		// System.out.println(super.thread + " " + (System.nanoTime() -
-		// super.starttime));
+
+//		 System.out.println(super.thread + " " + (System.nanoTime() -
+//		 super.starttime));
+
 	}
 }
 
@@ -1050,14 +1099,14 @@ class GravityThread extends PhysicsThread {
 
 	@Override
 	public void run() {
-		int startpoint = startIndex();
-		int endpoint = endIndex();
-		for (int i = startpoint; i < endpoint; i++) {
+
+		for (int i = startIndex(); i < endIndex(); i++) {
 			for (int j = 0; j < Space2D.universe.size(); j++) {
 				Space2D.universe.get(i).attractedToMT(Space2D.universe.get(j));
 			}
 		}
-		// System.out.println(super.thread + " " + (System.nanoTime() -
-		// super.starttime));
+
+//		 System.out.println(super.thread + " " + (System.nanoTime() -
+//		 super.starttime));
 	}
 }
