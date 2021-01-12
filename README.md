@@ -26,11 +26,11 @@ There are a bunch of configurable variables at the top of the code, listed below
     int FRAMEHEIGHT = 1080
     int FRAMEINTERVAL = 100
     int CAPTUREDFRAMES = 100000
-    boolean VSYNC = false
+    boolean VSYNC = true
     boolean SCREENCAP = false
     boolean COLLISION = true
     boolean MULTITHREADED = false
-    double speed = 1 * Math.pow(10, 3)
+    double speed = 6 * Math.pow(10, 2)
     double scale = 1 * Math.pow(10, -8)
     String screenshotFolder = "D:/Phys Sim/"
     String projectName = "SolarSystem2"
@@ -39,11 +39,11 @@ There are a bunch of configurable variables at the top of the code, listed below
 * FRAMEHEIGHT - The vertical windowed frame resolution, 1080 for a 1080p window.
 * FRAMEINTERVAL - The number of frames to skip when recording. When simulating at low speeds, changing this value can save a lot of drive space. It can be thought of as a timelapse of your simulation. Setting this to 1 will take a screenshot every frame.
 * CAPTUREDFRAMES - The number of frames to capture before disabling screencap. FRAMEINTERVAL * CAPTUREDFRAMES will tell you the runtime of the simulation.
-* VSYNC - Syncronize framerate with display refresh rate. Disabled by default, can be toggled at runtime with F10.
+* VSYNC - Syncronize framerate with display refresh rate. Enabled by default, can be toggled at runtime with F10.
 * SCREENCAP - Boolean value to determine if screenshots will be taken or not.
-* COLLISION - Boolean value to determine if the algorythm checks for collisions. Currently, the code only checks for hitboxes and doesn't check for path intersection. It's pretty useless during large simulations, but is fun to play with at a smaller scale.
-* MULTITHREADED - Boolean to determine if it uses java's default thread management or to spawn a thread for each core. Can be changed at runtime by pressing M.
-* speed - The speed of simulation, in seconds per frame. Can be toggled at runtime with + or - on the numpad.
+* COLLISION - Boolean value to determine if the algorythm checks for collisions. I recently added a collision function that scales with speed, but it is a bit overzealous at high speeds. Use with caution.
+* MULTITHREADED - Boolean to determine if it uses java's default thread management or to spawn a thread for each core. Can be toggled at runtime by pressing M. NOTE: Multithreading still has issues with frame pacing. It tends to stabalize after a while, but can sometimes take a minute or two. Best to enable multithreading when fps is below 10 or so.
+* speed - The speed of simulation, in seconds per frame. Default value is 10 minutes per frame (600 seconds). Can be adjusted at runtime with + or - on the numpad.
 * scale - The scale of the view, in pixels per meter. Can be changed at runtime with scroll wheel.
 * screenshotFolder - Path to where you want screenshots saved.
 * projectName - Folder to save images in. Images will be saved in screenshotFolder + projectName + "/", eg. D:/Phys Sim/SolarSystem2/
